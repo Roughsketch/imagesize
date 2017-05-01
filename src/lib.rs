@@ -86,17 +86,12 @@ mod tests {
     }
 }
 
-pub enum ImageType {
-    BMP,
-    GIF,
-    JPEG,
-    PNG,
-    WEBP,
-}
-
+/// An Error type used in failure cases.
 #[derive(Debug)]
 pub enum ImageError {
+    /// Used when the given data is not a supported format.
     NotSupported(String),
+    /// Used when an IoError occurs when trying to read the given data.
     IoError(std::io::Error),
 }
 
@@ -108,11 +103,43 @@ impl From<std::io::Error> for ImageError {
 
 pub type ImageResult<T> = Result<T, ImageError>;
 
+/// Holds the size information of an image.
 pub struct Dimensions {
+    /// Width of an image in pixels.
     pub width: usize,
+    /// Height of an image in pixels.
     pub height: usize,
 }
 
+/// Get the image dimensions from a local file.
+///
+/// # Arguments
+/// * `path` - A local path to the file to parse.
+///
+/// # Remarks
+/// 
+/// This method will try to read as little of the file as possible in order to
+/// get the proper size information.
+///
+/// # Error
+///
+/// This method will return an ImageError under the following conditions:
+///
+/// * The header isn't recognized as a supported image
+/// * The data isn't long enough to find the dimensions for the given format 
+///
+/// # Examples
+///
+/// ```
+/// use imagesize::get_dimensions;
+///
+/// match get_dimensions("test/test.webp") {
+///     Ok(dim) => {
+///         assert_eq!(dim.width, 716);
+///         assert_eq!(dim.height, 716);
+///     }
+///     Err(why) => println!("Error getting dimensions: {:?}", why)
+/// }
 pub fn get_dimensions<P>(path: P) -> ImageResult<Dimensions> where P: AsRef<Path> {
     let file = try!(File::open(path));
     let mut reader = BufReader::new(file);
@@ -130,6 +157,42 @@ pub fn get_dimensions<P>(path: P) -> ImageResult<Dimensions> where P: AsRef<Path
     }
 }
 
+/// Get the image dimensions from a block of data.
+///
+/// # Arguments
+/// * `data` - A Vec containing the data to parse for image dimensions.AsMut
+///
+/// # Remarks
+/// 
+/// This method is useful when you need only the size of an image and have
+/// a way to only read part of the data. For example, using the Range header
+/// in a http request to receive the first part of an image file.
+///
+/// # Error
+///
+/// This method will return an ImageError under the following conditions:
+///
+/// * The header isn't recognized as a supported image
+/// * The data isn't long enough to find the dimensions for the given format 
+///
+/// # Examples
+///
+/// ```
+/// use imagesize::get_dimensions_from_blob;
+///
+/// //  First 32 bytes of a PNG Header with size 123x321
+/// let data = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 
+///                 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 
+///                 0x00, 0x00, 0x00, 0x7B, 0x00, 0x00, 0x01, 0x41,
+///                 0x08, 0x06, 0x00, 0x00, 0x00, 0x9A, 0x38, 0xC4];
+///
+/// match get_dimensions_from_blob(data) {
+///     Ok(dim) => {
+///         assert_eq!(dim.width, 123);
+///         assert_eq!(dim.height, 321);
+///     }
+///     Err(why) => println!("Error getting dimensions: {:?}", why)
+/// }
 pub fn get_dimensions_from_blob(data: Vec<u8>) -> ImageResult<Dimensions> {
     let mut reader = BufReader::new(&data[..]);
 
