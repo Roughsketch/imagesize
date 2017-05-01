@@ -4,6 +4,7 @@ version = "0.1.2"
 authors = ["Maid Dog <maiddogsrl@gmail.com>"]
 description = "Quick probing of image dimensions without loading the entire file."
 repository = "https://github.com/Roughsketch/imagesize"
+documentation = "https://docs.rs/imagesize"
 keywords = ["image", "size"]
 categories = ["multimedia", "multimedia::images"]
 license = "MIT"
