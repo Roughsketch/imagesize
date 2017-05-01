@@ -1,0 +1,6 @@
+[package]
+name = "imagesize"
+version = "0.1.0"
+authors = ["Maid Dog <maiddogsrl@gmail.com>"]
+
+[dependencies]
