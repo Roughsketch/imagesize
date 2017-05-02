@@ -70,7 +70,7 @@ mod tests {
                         0x00, 0x00, 0x00, 0x7B, 0x00, 0x00, 0x01, 0x41,
                         0x08, 0x06, 0x00, 0x00, 0x00, 0x9A, 0x38, 0xC4];
 
-        match get_dimensions_from_blob(data) {
+        match get_dimensions_from_blob(&data) {
             Ok(dim) => {
                 assert_eq!(dim.width, 123);
                 assert_eq!(dim.height, 321);
@@ -82,7 +82,7 @@ mod tests {
     #[test]
     fn blob_too_small_test() {
         let data = vec![0x89, 0x00, 0x01, 0x02];
-        assert_eq!(get_dimensions_from_blob(data).is_err(), true);
+        assert_eq!(get_dimensions_from_blob(&data).is_err(), true);
     }
 }
 
@@ -186,14 +186,14 @@ pub fn get_dimensions<P>(path: P) -> ImageResult<Dimensions> where P: AsRef<Path
 ///                 0x00, 0x00, 0x00, 0x7B, 0x00, 0x00, 0x01, 0x41,
 ///                 0x08, 0x06, 0x00, 0x00, 0x00, 0x9A, 0x38, 0xC4];
 ///
-/// match get_dimensions_from_blob(data) {
+/// match get_dimensions_from_blob(&data) {
 ///     Ok(dim) => {
 ///         assert_eq!(dim.width, 123);
 ///         assert_eq!(dim.height, 321);
 ///     }
 ///     Err(why) => println!("Error getting dimensions: {:?}", why)
 /// }
-pub fn get_dimensions_from_blob(data: Vec<u8>) -> ImageResult<Dimensions> {
+pub fn get_dimensions_from_blob(data: &Vec<u8>) -> ImageResult<Dimensions> {
     let mut reader = BufReader::new(&data[..]);
 
     let mut header = [0; 1];
