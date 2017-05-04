@@ -5,7 +5,7 @@ Quickly probe the size of various image formats without reading the entire file.
 Add the following to your Cargo.toml:
 ```toml
 [dependencies]
-imagesize = "0.2"
+imagesize = "0.3"
 ```
 And import it using `extern crate`:
 ```rust
@@ -19,7 +19,11 @@ extern crate imagesize;
 * PNG
 * WEBP
 
-## Example
+## Examples
+
+### Note about *_safe
+Both functions shown below have an accompanying safe version, i.e. `get_dimensions_safe` and `get_dimensions_from_blob_safe`. The safe variants have added checks to be more certain an image is a file before returning a size. The non-safe versions will only check the first byte of the file which can be dangerous for formats which have ASCII character magic numbers.
+
 ### From a file
 ```rust
 let (width, height) = match get_dimensions("example.webp") {
