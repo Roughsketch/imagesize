@@ -120,7 +120,7 @@ pub fn get_dimensions_safe<P>(path: P) -> ImageResult<Dimensions> where P: AsRef
     } else if header[0] == 0x89 && header[1] == b'P' && header[2] == b'N' && header[3] == b'G' {
         get_png_dimensions(&mut reader, 16)
     } else if header[0] == b'G' && header[1] == b'I' && header[2] == b'F' && header[3] == b'8' {
-        get_gif_dimensions(&mut reader, 16)
+        get_gif_dimensions_from_header(&header)
     } else if header[0] == b'R' && header[1] == b'I' && header[2] == b'F' && header[3] == b'F' &&
               header[8] == b'W' && header[9] == b'E' && header[10] == b'B' && header[11] == b'P' {
         get_webp_dimensions(&mut reader, 16)
@@ -227,7 +227,7 @@ pub fn get_dimensions_from_blob_safe(data: &Vec<u8>) -> ImageResult<Dimensions> 
     } else if header[0] == 0x89 && header[1] == b'P' && header[2] == b'N' && header[3] == b'G' {
         get_png_dimensions(&mut reader, 16)
     } else if header[0] == b'G' && header[1] == b'I' && header[2] == b'F' && header[3] == b'8' {
-        get_gif_dimensions(&mut reader, 16)
+        get_gif_dimensions_from_header(&header)
     } else if header[0] == b'R' && header[1] == b'I' && header[2] == b'F' && header[3] == b'F' &&
               header[8] == b'W' && header[9] == b'E' && header[10] == b'B' && header[11] == b'P' {
         get_webp_dimensions(&mut reader, 16)
@@ -253,6 +253,13 @@ fn get_bmp_dimensions<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult<
                 ((buffer[5] as usize) << 8) |
                 ((buffer[6] as usize) << 16) |
                 ((buffer[7] as usize) << 24))
+    })
+}
+
+fn get_gif_dimensions_from_header(header: &[u8]) -> ImageResult<Dimensions> {
+    Ok(Dimensions {
+        width:  ((header[6] as usize) | ((header[7] as usize) << 8)),
+        height: ((header[8] as usize) | ((header[9] as usize) << 8))
     })
 }
 

@@ -165,6 +165,18 @@ fn blob_test_fail_safe() {
 
 #[test]
 fn blob_too_small_test_safe() {
-    let data = vec![0x89, 0x00, 0x01, 0x02];
+    let data = vec![0x89, 0x00];
+    assert_eq!(get_dimensions_from_blob_safe(&data).is_err(), true);
+}
+
+#[test]
+fn gif_blob_too_small_test() {
+    let data = vec![0x47, 0x49, 0x46, 0x38];
+    assert_eq!(get_dimensions_from_blob(&data).is_err(), true);
+}
+
+#[test]
+fn gif_blob_too_small_test_safe() {
+    let data = vec![0x47, 0x49, 0x46, 0x38];
     assert_eq!(get_dimensions_from_blob_safe(&data).is_err(), true);
 }
