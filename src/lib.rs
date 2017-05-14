@@ -69,7 +69,7 @@ pub fn get_dimensions<P>(path: P) -> ImageResult<Dimensions> where P: AsRef<Path
     match header[0] {
         0xFF => get_jpeg_dimensions(&mut reader, 1),
         0x89 => get_png_dimensions(&mut reader, 1),
-        b'R' => get_webp_dimensions(&mut reader, 1),
+        b'R' => get_webp_vp8x_dimensions(&mut reader, 1),
         b'G' => get_gif_dimensions(&mut reader, 1),
         b'B' => get_bmp_dimensions(&mut reader, 1),
         _ => Err(ImageError::NotSupported("Could not decode image.".to_owned()))
@@ -123,10 +123,10 @@ pub fn get_dimensions_safe<P>(path: P) -> ImageResult<Dimensions> where P: AsRef
         get_gif_dimensions_from_header(&header)
     } else if header[0] == b'R' && header[1] == b'I' && header[2] == b'F' && header[3] == b'F' &&
               header[8] == b'W' && header[9] == b'E' && header[10] == b'B' && header[11] == b'P' {
-        if header[4] == b'X' {
-            get_riffx_webp_dimensions(&mut reader, 16)
+        if header[15] == b' ' {
+            get_webp_vp8_dimensions(&mut reader, 16)
         } else {
-            get_webp_dimensions(&mut reader, 16)
+            get_webp_vp8x_dimensions(&mut reader, 16)
         }
     } else if header[0] == 0x42 && header[1] == 0x4D {
         get_bmp_dimensions(&mut reader, 16)
@@ -181,7 +181,7 @@ pub fn get_dimensions_from_blob(data: &Vec<u8>) -> ImageResult<Dimensions> {
     match header[0] {
         0xFF => get_jpeg_dimensions(&mut reader, 1),
         0x89 => get_png_dimensions(&mut reader, 1),
-        b'R' => get_webp_dimensions(&mut reader, 1),
+        b'R' => get_webp_vp8x_dimensions(&mut reader, 1),
         b'G' => get_gif_dimensions(&mut reader, 1),
         b'B' => get_bmp_dimensions(&mut reader, 1),
         _ => Err(ImageError::NotSupported("Could not decode image.".to_owned()))
@@ -234,10 +234,10 @@ pub fn get_dimensions_from_blob_safe(data: &Vec<u8>) -> ImageResult<Dimensions> 
         get_gif_dimensions_from_header(&header)
     } else if header[0] == b'R' && header[1] == b'I' && header[2] == b'F' && header[3] == b'F' &&
               header[8] == b'W' && header[9] == b'E' && header[10] == b'B' && header[11] == b'P' {
-        if header[4] == b'X' {
-            get_riffx_webp_dimensions(&mut reader, 16)
+        if header[15] == b' ' {
+            get_webp_vp8_dimensions(&mut reader, 16)
         } else {
-            get_webp_dimensions(&mut reader, 16)
+            get_webp_vp8x_dimensions(&mut reader, 16)
         }
     } else if header[0] == 0x42 && header[1] == 0x4D {
         get_bmp_dimensions(&mut reader, 16)
@@ -329,7 +329,7 @@ fn get_png_dimensions<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult<
     })
 }
 
-fn get_webp_dimensions<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult<Dimensions> {
+fn get_webp_vp8x_dimensions<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult<Dimensions> {
     let mut buffer = [0; 6];
     reader.consume(0x18 - offset);
     try!(reader.read_exact(&mut buffer));
@@ -345,7 +345,7 @@ fn get_webp_dimensions<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult
     })
 }
 
-fn get_riffx_webp_dimensions<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult<Dimensions> {
+fn get_webp_vp8_dimensions<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult<Dimensions> {
     let mut buffer = [0; 6];
     reader.consume(0x1A - offset);
     try!(reader.read_exact(&mut buffer));
