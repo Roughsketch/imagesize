@@ -113,6 +113,17 @@ fn webp_test_safe() {
 }
 
 #[test]
+fn riffx_webp_test_safe() {
+    match get_dimensions_safe("test/riffx.webp") {
+        Ok(dim) => {
+            assert_eq!(dim.width, 128);
+            assert_eq!(dim.height, 128);
+        }
+        Err(why) => println!("Error getting dimensions: {:?}", why)
+    }
+}
+
+#[test]
 fn blob_test() {
     //  PNG Header with size 123x321
     let data = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 
