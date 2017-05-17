@@ -4,68 +4,44 @@ use *;
 
 #[test]
 fn bmp_test() {
-    match get_dimensions("test/test.bmp") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 512);
-            assert_eq!(dim.height, 512);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions("test/test.bmp").unwrap();
+    assert_eq!(dim.width, 512);
+    assert_eq!(dim.height, 512);
 }
 
 #[test]
 fn bmp_test_safe() {
-    match get_dimensions_safe("test/test.bmp") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 512);
-            assert_eq!(dim.height, 512);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions_safe("test/test.bmp").unwrap();
+    assert_eq!(dim.width, 512);
+    assert_eq!(dim.height, 512);
 }
 
 #[test]
 fn gif_test() {
-    match get_dimensions("test/test.gif") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 100);
-            assert_eq!(dim.height, 100);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions("test/test.gif").unwrap();
+    assert_eq!(dim.width, 100);
+    assert_eq!(dim.height, 100);
 }
 
 #[test]
 fn gif_test_safe() {
-    match get_dimensions_safe("test/test.gif") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 100);
-            assert_eq!(dim.height, 100);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions_safe("test/test.gif").unwrap();
+    assert_eq!(dim.width, 100);
+    assert_eq!(dim.height, 100);
 }
 
 #[test]
 fn jpeg_test() {
-    match get_dimensions("test/test.jpg") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 690);
-            assert_eq!(dim.height, 298);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions("test/test.jpg").unwrap();
+    assert_eq!(dim.width, 690);
+    assert_eq!(dim.height, 298);
 }
 
 #[test]
 fn jpeg_test_safe() {
-    match get_dimensions_safe("test/test.jpg") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 690);
-            assert_eq!(dim.height, 298);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions_safe("test/test.jpg").unwrap();
+    assert_eq!(dim.width, 690);
+    assert_eq!(dim.height, 298);
 }
 
 #[test]
@@ -77,57 +53,37 @@ fn jpeg_extra_info_test_safe() {
 
 #[test]
 fn png_test() {
-    match get_dimensions("test/test.png") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 2000);
-            assert_eq!(dim.height, 2000);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions("test/test.png").unwrap();
+    assert_eq!(dim.width, 2000);
+    assert_eq!(dim.height, 2000);
 }
 
 #[test]
 fn png_test_safe() {
-    match get_dimensions_safe("test/test.png") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 2000);
-            assert_eq!(dim.height, 2000);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions_safe("test/test.png").unwrap();
+    assert_eq!(dim.width, 2000);
+    assert_eq!(dim.height, 2000);
 }
 
 #[test]
 fn webp_test() {
-    match get_dimensions("test/test.webp") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 716);
-            assert_eq!(dim.height, 716);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions("test/test.webp").unwrap();
+    assert_eq!(dim.width, 716);
+    assert_eq!(dim.height, 716);
 }
 
 #[test]
 fn webp_test_safe() {
-    match get_dimensions_safe("test/test.webp") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 716);
-            assert_eq!(dim.height, 716);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions_safe("test/test.webp").unwrap();
+    assert_eq!(dim.width, 716);
+    assert_eq!(dim.height, 716);
 }
 
 #[test]
 fn riffx_webp_test_safe() {
-    match get_dimensions_safe("test/riffx.webp") {
-        Ok(dim) => {
-            assert_eq!(dim.width, 128);
-            assert_eq!(dim.height, 128);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions_safe("test/riffx.webp").unwrap();
+    assert_eq!(dim.width, 128);
+    assert_eq!(dim.height, 128);
 }
 
 #[test]
@@ -138,13 +94,9 @@ fn blob_test() {
                     0x00, 0x00, 0x00, 0x7B, 0x00, 0x00, 0x01, 0x41,
                     0x08, 0x06, 0x00, 0x00, 0x00, 0x9A, 0x38, 0xC4];
 
-    match get_dimensions_from_blob(&data) {
-        Ok(dim) => {
-            assert_eq!(dim.width, 123);
-            assert_eq!(dim.height, 321);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions_from_blob(&data).unwrap();
+    assert_eq!(dim.width, 123);
+    assert_eq!(dim.height, 321);
 }
 
 #[test]
@@ -161,13 +113,9 @@ fn blob_test_safe() {
                     0x00, 0x00, 0x00, 0x7B, 0x00, 0x00, 0x01, 0x41,
                     0x08, 0x06, 0x00, 0x00, 0x00, 0x9A, 0x38, 0xC4];
 
-    match get_dimensions_from_blob_safe(&data) {
-        Ok(dim) => {
-            assert_eq!(dim.width, 123);
-            assert_eq!(dim.height, 321);
-        }
-        Err(why) => println!("Error getting dimensions: {:?}", why)
-    }
+    let dim = get_dimensions_from_blob_safe(&data).unwrap();
+    assert_eq!(dim.width, 123);
+    assert_eq!(dim.height, 321);
 }
 
 #[test]
