@@ -69,6 +69,13 @@ fn jpeg_test_safe() {
 }
 
 #[test]
+fn jpeg_extra_info_test_safe() {
+    let dim = get_dimensions_safe("test/extra.jpg").unwrap();
+    assert_eq!(dim.width, 1500);
+    assert_eq!(dim.height, 844);
+}
+
+#[test]
 fn png_test() {
     match get_dimensions("test/test.png") {
         Ok(dim) => {

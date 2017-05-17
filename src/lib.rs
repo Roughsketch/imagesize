@@ -115,7 +115,7 @@ pub fn get_dimensions_safe<P>(path: P) -> ImageResult<Dimensions> where P: AsRef
     let mut header = [0; 16];
     try!(reader.read_exact(&mut header));
 
-    if header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF && header[3] == 0xE0 {
+    if header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF {
         get_jpeg_dimensions(&mut reader, 16)
     } else if header[0] == 0x89 && header[1] == b'P' && header[2] == b'N' && header[3] == b'G' {
         get_png_dimensions(&mut reader, 16)
