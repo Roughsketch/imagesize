@@ -42,7 +42,7 @@ pub struct Dimensions {
 ///
 /// # Error
 ///
-/// This method will return an ImageError under the following conditions:
+/// This method will return an `ImageError` under the following conditions:
 ///
 /// * The first byte of the header isn't recognized as a supported image
 /// * The data isn't long enough to find the dimensions for the given format 
@@ -91,7 +91,7 @@ pub fn get_dimensions<P>(path: P) -> ImageResult<Dimensions> where P: AsRef<Path
 ///
 /// # Error
 ///
-/// This method will return an ImageError under the following conditions:
+/// This method will return an `ImageError` under the following conditions:
 ///
 /// * The header isn't recognized as a supported image
 /// * The data isn't long enough to find the dimensions for the given format 
@@ -148,7 +148,7 @@ pub fn get_dimensions_safe<P>(path: P) -> ImageResult<Dimensions> where P: AsRef
 ///
 /// # Error
 ///
-/// This method will return an ImageError under the following conditions:
+/// This method will return an `ImageError` under the following conditions:
 ///
 /// * The first byte of the header isn't recognized as a supported image
 /// * The data isn't long enough to find the dimensions for the given format 
@@ -172,7 +172,7 @@ pub fn get_dimensions_safe<P>(path: P) -> ImageResult<Dimensions> where P: AsRef
 ///     Err(why) => println!("Error getting dimensions: {:?}", why)
 /// }
 /// ```
-pub fn get_dimensions_from_blob(data: &Vec<u8>) -> ImageResult<Dimensions> {
+pub fn get_dimensions_from_blob(data: &[u8]) -> ImageResult<Dimensions> {
     let mut reader = BufReader::new(&data[..]);
 
     let mut header = [0; 1];
@@ -201,7 +201,7 @@ pub fn get_dimensions_from_blob(data: &Vec<u8>) -> ImageResult<Dimensions> {
 ///
 /// # Error
 ///
-/// This method will return an ImageError under the following conditions:
+/// This method will return an `ImageError` under the following conditions:
 ///
 /// * The header isn't recognized as a supported image
 /// * The data isn't long enough to find the dimensions for the given format 
@@ -220,7 +220,7 @@ pub fn get_dimensions_from_blob(data: &Vec<u8>) -> ImageResult<Dimensions> {
 ///
 /// assert_eq!(get_dimensions_from_blob_safe(&data).is_err(), true);
 /// ```
-pub fn get_dimensions_from_blob_safe(data: &Vec<u8>) -> ImageResult<Dimensions> {
+pub fn get_dimensions_from_blob_safe(data: &[u8]) -> ImageResult<Dimensions> {
     let mut reader = BufReader::new(&data[..]);
 
     let mut header = [0; 16];
