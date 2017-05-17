@@ -285,22 +285,20 @@ fn get_gif_dimensions<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult<
 fn get_jpeg_dimensions<R: BufRead>(reader: &mut R, _offset: usize) -> ImageResult<Dimensions> {
     let mut search = Vec::new();
     let mut buffer = [0; 4];
-    let mut page = [0; 3];
+    let mut page = [0; 1];
 
-    //  Read until it hits the next potential marker
-    let _ = try!(reader.read_until(0xFF, &mut search));
     loop {
-        //  Read in marker identifier as well as size bytes
+        //  Read until it hits the next potential marker
+        let _ = try!(reader.read_until(0xFF, &mut search));
+
         try!(reader.read_exact(&mut page));
         if page[0] == 0xC0 {
             //  Correct marker, go forward 3 bytes so we're at height offset
             reader.consume(3);
             break;
-        } else {
-            //  Wrong marker, use size to jump to next marker
-            let size: usize = (page[1] as usize) * 256 + (page[2] as usize) - 2;
-            reader.consume(size);
         }
+
+        reader.consume(1);
     }
 
     try!(reader.read_exact(&mut buffer));
