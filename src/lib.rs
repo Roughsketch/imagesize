@@ -51,7 +51,7 @@ pub struct ImageSize {
 /// # Remarks
 ///
 /// This will check the header to determine what image type the data is.
-fn image_type(header: &[u8]) -> ImageType {
+pub fn image_type(header: &[u8]) -> ImageType {
     if &header[0..3] == b"\xFF\xD8\xFF" {
         ImageType::Jpeg
     } else if &header[0..4] == b"\x89PNG" {
