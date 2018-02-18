@@ -9,5 +9,6 @@ readme = "README.md"
 keywords = ["image", "size"]
 categories = ["multimedia", "multimedia::images"]
 license = "MIT"
+exclude = ["test/*"]
 
 [dependencies]
