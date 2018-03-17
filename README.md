@@ -1,3 +1,5 @@
+[![ci-badge][]][ci]
+
 # imagesize
 Quickly probe the size of various image formats without reading the entire file.
 
@@ -38,3 +40,6 @@ let (width, height) = match blob_size(&data) {
     Err(why) => println!("Error getting dimensions: {:?}", why)
 }
 ```
+
+[ci]: https://travis-ci.org/Roughsketch/imagesize
+[ci-badge]: https://travis-ci.org/Roughsketch/imagesize.svg?branch=master
