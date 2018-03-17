@@ -1,4 +1,4 @@
-[![ci-badge][]][ci]
+[![ci-badge][]][ci] [![docs-badge][]][docs]
 
 # imagesize
 Quickly probe the size of various image formats without reading the entire file.
@@ -43,3 +43,5 @@ let (width, height) = match blob_size(&data) {
 
 [ci]: https://travis-ci.org/Roughsketch/imagesize
 [ci-badge]: https://travis-ci.org/Roughsketch/imagesize.svg?branch=master
+[docs]: https://docs.rs/imagesize
+[docs-badge]: https://img.shields.io/badge/docs-online-5023dd.svg
