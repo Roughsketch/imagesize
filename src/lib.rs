@@ -101,7 +101,7 @@ fn dispatch_header<R: BufRead>(reader: &mut R, header: &[u8]) -> ImageResult<Ima
 ///
 /// # Error
 ///
-/// This method will return an `ImageError` under the following conditions:
+/// This method will return an [`ImageError`] under the following conditions:
 ///
 /// * The header isn't recognized as a supported image
 /// * The data isn't long enough to find the size for the given format
@@ -118,6 +118,9 @@ fn dispatch_header<R: BufRead>(reader: &mut R, header: &[u8]) -> ImageResult<Ima
 ///     }
 ///     Err(why) => println!("Error getting size: {:?}", why)
 /// }
+/// ```
+/// 
+/// [`ImageError`]: enum.ImageError.html
 pub fn size<P>(path: P) -> ImageResult<ImageSize> where P: AsRef<Path> {
     let file = File::open(path)?;
     let mut reader = BufReader::new(file);
@@ -135,7 +138,7 @@ pub fn size<P>(path: P) -> ImageResult<ImageSize> where P: AsRef<Path> {
 ///
 /// # Error
 ///
-/// This method will return an `ImageError` under the following conditions:
+/// This method will return an [`ImageError`] under the following conditions:
 ///
 /// * The header isn't recognized as a supported image
 /// * The data isn't long enough to find the size for the given format
@@ -153,6 +156,8 @@ pub fn size<P>(path: P) -> ImageResult<ImageSize> where P: AsRef<Path> {
 ///
 /// assert_eq!(blob_size(&data).is_err(), true);
 /// ```
+/// 
+/// [`ImageError`]: enum.ImageError.html
 pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
     let mut reader = BufReader::new(&data[..]);
 
