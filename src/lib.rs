@@ -46,21 +46,21 @@ pub struct ImageSize {
 /// Get the image type from a header
 ///
 /// # Arguments
-/// * `header` - The header of the file. Must be 12 bytes to be safe.
+/// * `header` - The header of the file.
 ///
 /// # Remarks
 ///
 /// This will check the header to determine what image type the data is.
 pub fn image_type(header: &[u8]) -> ImageType {
-    if &header[0..3] == b"\xFF\xD8\xFF" {
+    if header.len() >= 3 && &header[0..3] == b"\xFF\xD8\xFF" {
         ImageType::Jpeg
-    } else if &header[0..4] == b"\x89PNG" {
+    } else if header.len() >= 4 && &header[0..4] == b"\x89PNG" {
         ImageType::Png
-    } else if &header[0..4] == b"GIF8" {
+    } else if header.len() >= 4 && &header[0..4] == b"GIF8" {
         ImageType::Gif
-    } else if &header[0..4] == b"RIFF" && &header[8..12] == b"WEBP" {
+    } else if header.len() >= 12 && &header[0..4] == b"RIFF" && &header[8..12] == b"WEBP" {
         ImageType::Webp
-    } else if &header[0..2] == b"\x42\x4D" {
+    } else if header.len() >= 2 && &header[0..2] == b"\x42\x4D" {
         ImageType::Bmp
     } else {
         ImageType::Unknown
