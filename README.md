@@ -1,4 +1,4 @@
-[![ci-badge][]][ci] [![docs-badge][]][docs]
+[![ci-badge][]][ci] [![docs-badge][]][docs] [![crates.io version]][crates.io link]
 
 # imagesize
 Quickly probe the size of various image formats without reading the entire file.
@@ -42,6 +42,8 @@ let (width, height) = match blob_size(&data) {
 ```
 
 [ci]: https://travis-ci.org/Roughsketch/imagesize
-[ci-badge]: https://travis-ci.org/Roughsketch/imagesize.svg?branch=master
+[ci-badge]: https://img.shields.io/travis/Roughsketch/imagesize.svg?style=flat-square
+[crates.io link]: https://crates.io/crates/imagesize
+[crates.io version]: https://img.shields.io/crates/v/imagesize.svg?style=flat-square
 [docs]: https://docs.rs/imagesize
-[docs-badge]: https://img.shields.io/badge/docs-online-5023dd.svg
+[docs-badge]: https://img.shields.io/badge/docs-online-5023dd.svg?style=flat-square
