@@ -1,6 +1,6 @@
 [package]
 name = "imagesize"
-version = "0.5.2"
+version = "0.6.0"
 authors = ["Maid Dog <maiddogsrl@gmail.com>"]
 description = "Quick probing of image dimensions without loading the entire file."
 documentation = "https://docs.rs/imagesize"
