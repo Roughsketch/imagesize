@@ -26,7 +26,6 @@ impl From<std::io::Error> for ImageError {
 pub type ImageResult<T> = Result<T, ImageError>;
 
 pub enum ImageType {
-    Unknown,
     Bmp,
     Gif,
     Jpeg,
@@ -51,20 +50,52 @@ pub struct ImageSize {
 /// # Remarks
 ///
 /// This will check the header to determine what image type the data is.
-pub fn image_type(header: &[u8]) -> ImageType {
-    if header.len() >= 3 && &header[0..3] == b"\xFF\xD8\xFF" {
-        ImageType::Jpeg
-    } else if header.len() >= 4 && &header[0..4] == b"\x89PNG" {
-        ImageType::Png
-    } else if header.len() >= 4 && &header[0..4] == b"GIF8" {
-        ImageType::Gif
-    } else if header.len() >= 12 && &header[0..4] == b"RIFF" && &header[8..12] == b"WEBP" {
-        ImageType::Webp
-    } else if header.len() >= 2 && &header[0..2] == b"\x42\x4D" {
-        ImageType::Bmp
-    } else {
-        ImageType::Unknown
+pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
+    if header.len() >= 2 {
+        if &header[0..2] == b"\x42\x4D" {
+            return Ok(ImageType::Bmp);
+        } else if &header[0..2] == b"\xFF\xD8" {
+            if header.len() >= 3 {
+                return if &header[2..3] == b"\xFF" {
+                    Ok(ImageType::Jpeg)
+                } else {
+                    not_supported()
+                };
+            }
+        } else if &header[0..2] == b"\x89P" {
+            if header.len() >= 4 {
+                return if &header[2..4] == b"NG" {
+                    Ok(ImageType::Png)
+                } else {
+                    not_supported()
+                };
+            }
+        } else if &header[0..2] == b"GI" {
+            if header.len() >= 4 {
+                return if &header[2..4] == b"F8" {
+                    Ok(ImageType::Gif)
+                } else {
+                    not_supported()
+                };
+            }
+        } else if &header[0..2] == b"RI" {
+            if header.len() >= 12 {
+                return if &header[2..4] == b"FF" && &header[8..12] == b"WEBP" {
+                    Ok(ImageType::Webp)
+                } else {
+                    not_supported()
+                };
+            }
+        } else {
+            return not_supported();
+        }
     }
+
+    fn not_supported() -> ImageResult<ImageType> {
+        Err(ImageError::NotSupported("Could not decode image.".into()))
+    }
+
+    Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Not enough data").into())
 }
 
 /// Calls the correct image size method based on the image type
@@ -73,7 +104,7 @@ pub fn image_type(header: &[u8]) -> ImageType {
 /// * `reader` - A reader for the data
 /// * `header` - The header of the file
 fn dispatch_header<R: BufRead>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
-    match image_type(&header) {
+    match image_type(&header)? {
         ImageType::Bmp => bmp_size(reader, header.len()),
         ImageType::Gif => gif_size(header),
         ImageType::Jpeg => jpeg_size(reader, header.len()),
@@ -85,7 +116,6 @@ fn dispatch_header<R: BufRead>(reader: &mut R, header: &[u8]) -> ImageResult<Ima
                 webp_vp8x_size(reader, header.len())
             }
         }
-        ImageType::Unknown => Err(ImageError::NotSupported("Could not decode image.".into())),
     }
 }
 
