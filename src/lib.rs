@@ -1,3 +1,5 @@
+use std::error::Error;
+use std::fmt;
 use std::fs::File;
 use std::path::Path;
 use std::io::Read;
@@ -10,11 +12,24 @@ mod test;
 #[derive(Debug)]
 pub enum ImageError {
     /// Used when the given data is not a supported format.
-    NotSupported(String),
+    NotSupported,
     /// Used when the image has an invalid format.
-    CorruptedImage(String),
+    CorruptedImage,
     /// Used when an IoError occurs when trying to read the given data.
     IoError(std::io::Error),
+}
+
+impl Error for ImageError {}
+
+impl fmt::Display for ImageError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::ImageError::*;
+        match self {
+            NotSupported => f.write_str("Could not decode image"),
+            CorruptedImage => f.write_str("Hit end of file before finding size"),
+            IoError(error) => error.fmt(f),
+        }
+    }
 }
 
 impl From<std::io::Error> for ImageError {
@@ -59,7 +74,7 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
                 return if &header[2..3] == b"\xFF" {
                     Ok(ImageType::Jpeg)
                 } else {
-                    not_supported()
+                    Err(ImageError::NotSupported)
                 };
             }
         } else if &header[0..2] == b"\x89P" {
@@ -67,7 +82,7 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
                 return if &header[2..4] == b"NG" {
                     Ok(ImageType::Png)
                 } else {
-                    not_supported()
+                    Err(ImageError::NotSupported)
                 };
             }
         } else if &header[0..2] == b"GI" {
@@ -75,7 +90,7 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
                 return if &header[2..4] == b"F8" {
                     Ok(ImageType::Gif)
                 } else {
-                    not_supported()
+                    Err(ImageError::NotSupported)
                 };
             }
         } else if &header[0..2] == b"RI" {
@@ -83,16 +98,12 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
                 return if &header[2..4] == b"FF" && &header[8..12] == b"WEBP" {
                     Ok(ImageType::Webp)
                 } else {
-                    not_supported()
+                    Err(ImageError::NotSupported)
                 };
             }
         } else {
-            return not_supported();
+            return Err(ImageError::NotSupported);
         }
-    }
-
-    fn not_supported() -> ImageResult<ImageType> {
-        Err(ImageError::NotSupported("Could not decode image.".into()))
     }
 
     Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Not enough data").into())
@@ -245,7 +256,7 @@ fn jpeg_size<R: BufRead>(reader: &mut R, _offset: usize) -> ImageResult<ImageSiz
         } else if page[0] == 0xD9 {
             depth -= 1;
             if depth < 0 {
-                return Err(ImageError::CorruptedImage("Hit end of file before finding size.".into()));
+                return Err(ImageError::CorruptedImage);
             }
         }
 
