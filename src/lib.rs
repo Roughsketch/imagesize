@@ -40,6 +40,7 @@ impl From<std::io::Error> for ImageError {
 
 pub type ImageResult<T> = Result<T, ImageError>;
 
+/// Types of image formats that this crate can identify.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageType {
     Bmp,
@@ -130,7 +131,7 @@ fn dispatch_header<R: BufRead>(reader: &mut R, header: &[u8]) -> ImageResult<Ima
 ///
 /// This method will return an [`ImageError`] under the following conditions:
 ///
-/// * The header isn't recognized as a supported image
+/// * The header isn't recognized as a supported image format
 /// * The data isn't long enough to find the size for the given format
 ///
 /// # Examples
@@ -167,7 +168,7 @@ pub fn size<P>(path: P) -> ImageResult<ImageSize> where P: AsRef<Path> {
 ///
 /// This method will return an [`ImageError`] under the following conditions:
 ///
-/// * The header isn't recognized as a supported image
+/// * The header isn't recognized as a supported image format
 /// * The data isn't long enough to find the size for the given format
 ///
 /// # Examples
