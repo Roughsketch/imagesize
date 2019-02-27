@@ -7,11 +7,7 @@ Quickly probe the size of various image formats without reading the entire file.
 Add the following to your Cargo.toml:
 ```toml
 [dependencies]
-imagesize = "0.6"
-```
-And import it using `extern crate`:
-```rust
-extern crate imagesize;
+imagesize = "0.7"
 ```
 
 ## Supported Image Formats
@@ -19,6 +15,7 @@ extern crate imagesize;
 * GIF
 * JPEG
 * PNG
+* PSD / PSB
 * WEBP
 
 ## Examples
