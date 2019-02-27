@@ -2,6 +2,13 @@
 use ::*;
 
 #[test]
+fn apng_test() {
+    let dim = size("test/test.apng").unwrap();
+    assert_eq!(dim.width, 100);
+    assert_eq!(dim.height, 100);
+}
+
+#[test]
 fn bmp_test() {
     let dim = size("test/test.bmp").unwrap();
     assert_eq!(dim.width, 512);
@@ -34,6 +41,13 @@ fn png_test() {
     let dim = size("test/test.png").unwrap();
     assert_eq!(dim.width, 2000);
     assert_eq!(dim.height, 2000);
+}
+
+#[test]
+fn psd_test() {
+    let dim = size("test/test.psd").unwrap();
+    assert_eq!(dim.width, 500);
+    assert_eq!(dim.height, 500);
 }
 
 #[test]

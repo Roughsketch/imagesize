@@ -40,16 +40,18 @@ impl From<std::io::Error> for ImageError {
 
 pub type ImageResult<T> = Result<T, ImageError>;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageType {
     Bmp,
     Gif,
     Jpeg,
     Png,
+    Psd,
     Webp,
 }
 
 /// Holds the size information of an image.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ImageSize {
     /// Width of an image in pixels.
     pub width: usize,
@@ -69,38 +71,18 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
     if header.len() >= 2 {
         if &header[0..2] == b"\x42\x4D" {
             return Ok(ImageType::Bmp);
-        } else if &header[0..2] == b"\xFF\xD8" {
-            if header.len() >= 3 {
-                return if &header[2..3] == b"\xFF" {
-                    Ok(ImageType::Jpeg)
-                } else {
-                    Err(ImageError::NotSupported)
-                };
-            }
-        } else if &header[0..2] == b"\x89P" {
-            if header.len() >= 4 {
-                return if &header[2..4] == b"NG" {
-                    Ok(ImageType::Png)
-                } else {
-                    Err(ImageError::NotSupported)
-                };
-            }
-        } else if &header[0..2] == b"GI" {
-            if header.len() >= 4 {
-                return if &header[2..4] == b"F8" {
-                    Ok(ImageType::Gif)
-                } else {
-                    Err(ImageError::NotSupported)
-                };
-            }
-        } else if &header[0..2] == b"RI" {
-            if header.len() >= 12 {
-                return if &header[2..4] == b"FF" && &header[8..12] == b"WEBP" {
-                    Ok(ImageType::Webp)
-                } else {
-                    Err(ImageError::NotSupported)
-                };
-            }
+        } else if header.len() >= 3 && &header[0..3] == b"\xFF\xD8\xFF" {
+            return Ok(ImageType::Jpeg);
+        } else if header.len() >= 4 && &header[0..4] == b"\x89PNG" {
+            return Ok(ImageType::Png);
+        } else if header.len() >= 4 && &header[0..4] == b"GIF8" {
+            return Ok(ImageType::Gif);
+        } else if header.len() >= 4 && &header[0..4] == b"8BPS" {
+            return Ok(ImageType::Psd);
+        } else if header.len() >= 12 && 
+            &header[0..4] == b"RIFF" &&
+            &header[8..12] == b"WEBP"{
+            return Ok(ImageType::Webp);
         } else {
             return Err(ImageError::NotSupported);
         }
@@ -120,11 +102,15 @@ fn dispatch_header<R: BufRead>(reader: &mut R, header: &[u8]) -> ImageResult<Ima
         ImageType::Gif => gif_size(header),
         ImageType::Jpeg => jpeg_size(reader, header.len()),
         ImageType::Png => png_size(reader, header.len()),
+        ImageType::Psd => psd_size(reader, header.len()),
         ImageType::Webp => {
-            if header[15] == b' ' {
-                webp_vp8_size(reader, header.len())
+            let mut buffer = [0; 4];
+            reader.read_exact(&mut buffer)?;
+
+            if buffer[3] == b' ' {
+                webp_vp8_size(reader, header.len() + buffer.len())
             } else {
-                webp_vp8x_size(reader, header.len())
+                webp_vp8x_size(reader, header.len() + buffer.len())
             }
         }
     }
@@ -166,7 +152,7 @@ pub fn size<P>(path: P) -> ImageResult<ImageSize> where P: AsRef<Path> {
     let file = File::open(path)?;
     let mut reader = BufReader::new(file);
 
-    let mut header = [0; 16];
+    let mut header = [0; 12];
     reader.read_exact(&mut header)?;
 
     dispatch_header(&mut reader, &header)
@@ -202,7 +188,7 @@ pub fn size<P>(path: P) -> ImageResult<ImageSize> where P: AsRef<Path> {
 pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
     let mut reader = BufReader::new(&data[..]);
 
-    let mut header = [0; 16];
+    let mut header = [0; 12];
     reader.read_exact(&mut header)?;
 
     dispatch_header(&mut reader, &header)
@@ -286,6 +272,24 @@ fn png_size<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult<ImageSize>
                 ((buffer[6] as usize) << 8) |
                 ((buffer[5] as usize) << 16) |
                 ((buffer[4] as usize) << 24))
+    })
+}
+
+fn psd_size<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult<ImageSize> {
+    let mut buffer = [0; 8];
+    reader.consume(14 - offset);
+    reader.read_exact(&mut buffer)?;
+
+    Ok(ImageSize {
+        width:  ((buffer[7] as usize) |
+                ((buffer[6] as usize) << 8) |
+                ((buffer[5] as usize) << 16) |
+                ((buffer[4] as usize) << 24)),
+
+        height: ((buffer[3] as usize) |
+                ((buffer[2] as usize) << 8) |
+                ((buffer[1] as usize) << 16) |
+                ((buffer[0] as usize) << 24))
     })
 }
 
