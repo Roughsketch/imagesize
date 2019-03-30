@@ -51,6 +51,13 @@ fn psd_test() {
 }
 
 #[test]
+fn tiff_test() {
+    let dim = size("test/test.tif").unwrap();
+    assert_eq!(dim.width, 1419);
+    assert_eq!(dim.height, 1001);
+}
+
+#[test]
 fn webp_test() {
     let dim = size("test/test.webp").unwrap();
     assert_eq!(dim.width, 716);

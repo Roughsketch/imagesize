@@ -7,7 +7,7 @@ Quickly probe the size of various image formats without reading the entire file.
 Add the following to your Cargo.toml:
 ```toml
 [dependencies]
-imagesize = "0.7"
+imagesize = "0.8"
 ```
 
 ## Supported Image Formats
@@ -16,6 +16,7 @@ imagesize = "0.7"
 * JPEG
 * PNG
 * PSD / PSB
+* TIFF
 * WEBP
 
 ## Examples
