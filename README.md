@@ -3,6 +3,8 @@
 # imagesize
 Quickly probe the size of various image formats without reading the entire file.
 
+The goal of this crate is to be able to read the dimensions of a supported image without loading unnecessary data, and without pulling in more dependencies. Most reads only require 16 bytes or less, and more complex formats take advantage of skipping junk data.
+
 ## Usage
 Add the following to your Cargo.toml:
 ```toml
@@ -18,6 +20,8 @@ imagesize = "0.8"
 * PSD / PSB
 * TIFF
 * WEBP
+
+If you have a format you think should be added, feel free to create an issue.
 
 ## Examples
 
