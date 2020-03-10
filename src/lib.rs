@@ -256,6 +256,10 @@ fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<()>
             return Ok(());
         }
 
+        if size <= 8 {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Invalid heif box size: {}", size)).into());
+        }
+
         reader.consume((size - 8) as usize);
     }
 }
