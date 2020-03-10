@@ -15,6 +15,7 @@ imagesize = "0.8"
 ## Supported Image Formats
 * BMP
 * GIF
+* HEIC / HEIF
 * JPEG
 * PNG
 * PSD / PSB
