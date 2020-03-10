@@ -113,16 +113,7 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageRes
         ImageType::Png => png_size(reader, header.len()),
         ImageType::Psd => psd_size(reader, header.len()),
         ImageType::Tiff => tiff_size(reader, header),
-        ImageType::Webp => {
-            let mut buffer = [0; 4];
-            reader.read_exact(&mut buffer)?;
-
-            if buffer[3] == b' ' {
-                webp_vp8_size(reader, header.len() + buffer.len())
-            } else {
-                webp_vp8x_size(reader, header.len() + buffer.len())
-            }
-        }
+        ImageType::Webp => webp_size(reader, header),
     }
 }
 
@@ -372,6 +363,17 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
 
     //  If no width/height pair was found return invalid data
     return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "No dimensions in IFD tags").into())
+}
+
+fn webp_size<R: BufRead>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
+    let mut buffer = [0; 4];
+    reader.read_exact(&mut buffer)?;
+
+    if buffer[3] == b' ' {
+        webp_vp8_size(reader, header.len() + buffer.len())
+    } else {
+        webp_vp8x_size(reader, header.len() + buffer.len())
+    }
 }
 
 fn webp_vp8x_size<R: BufRead>(reader: &mut R, offset: usize) -> ImageResult<ImageSize> {
