@@ -225,8 +225,39 @@ fn gif_size(header: &[u8]) -> ImageResult<ImageSize> {
     })
 }
 
-fn heif_size<R: BufRead>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
-    Err(ImageError::NotSupported)
+fn heif_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
+    //  Read the ftyp header size
+    let ftyp_size = read_u32(&mut Cursor::new(&header[0..]), &Endian::Big)?;
+
+    //  Jump to the first actual box offset
+    reader.seek(SeekFrom::Start(ftyp_size.into()))?;
+
+    //  Skip to meta tag which contains all the metadata
+    skip_to_tag(reader, b"meta")?;
+    read_u32(reader, &Endian::Big)?;    //  Meta has a junk value after it
+    skip_to_tag(reader, b"iprp")?;      //  Find iprp tag
+    skip_to_tag(reader, b"ipco")?;      //  Find ipco tag
+    skip_to_tag(reader, b"ispe")?;      //  Find ispe tag which has spatial dimensions
+
+    read_u32(reader, &Endian::Big)?;    //  Discard junk value
+    let width = read_u32(reader, &Endian::Big)? as usize;
+    let height = read_u32(reader, &Endian::Big)? as usize;
+    return Ok(ImageSize { width, height });
+}
+
+fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<()> {
+    let mut tag_buf = [0; 4];
+
+    loop {
+        let size = read_u32(reader, &Endian::Big)?;
+        reader.read_exact(&mut tag_buf)?;
+
+        if tag_buf == tag {
+            return Ok(());
+        }
+
+        reader.consume((size - 8) as usize);
+    }
 }
 
 fn jpeg_size<R: BufRead>(reader: &mut R, _offset: usize) -> ImageResult<ImageSize> {
