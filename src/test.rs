@@ -23,6 +23,13 @@ fn gif_test() {
 }
 
 #[test]
+fn heif_test() {
+    let dim = size("test/test.heic").unwrap();
+    assert_eq!(dim.width, 1280);
+    assert_eq!(dim.height, 720);
+}
+
+#[test]
 fn jpeg_test() {
     let dim = size("test/test.jpg").unwrap();
     assert_eq!(dim.width, 690);

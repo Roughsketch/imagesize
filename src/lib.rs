@@ -44,6 +44,7 @@ pub type ImageResult<T> = Result<T, ImageError>;
 pub enum ImageType {
     Bmp,
     Gif,
+    Heif,
     Jpeg,
     Png,
     Psd,
@@ -88,6 +89,9 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
             return Ok(ImageType::Tiff);
         } else if header.len() >= 4 && &header[0..4] == b"8BPS" {
             return Ok(ImageType::Psd);
+        } else if header.len() >= 8 &&
+            &header[4..8] == b"ftyp" {
+            return Ok(ImageType::Heif);
         } else if header.len() >= 12 && 
             &header[0..4] == b"RIFF" &&
             &header[8..12] == b"WEBP"{
@@ -109,6 +113,7 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageRes
     match image_type(&header)? {
         ImageType::Bmp => bmp_size(reader, header.len()),
         ImageType::Gif => gif_size(header),
+        ImageType::Heif => heif_size(reader, header),
         ImageType::Jpeg => jpeg_size(reader, header.len()),
         ImageType::Png => png_size(reader, header.len()),
         ImageType::Psd => psd_size(reader, header.len()),
@@ -218,6 +223,10 @@ fn gif_size(header: &[u8]) -> ImageResult<ImageSize> {
         width:  ((header[6] as usize) | ((header[7] as usize) << 8)),
         height: ((header[8] as usize) | ((header[9] as usize) << 8))
     })
+}
+
+fn heif_size<R: BufRead>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
+    Err(ImageError::NotSupported)
 }
 
 fn jpeg_size<R: BufRead>(reader: &mut R, _offset: usize) -> ImageResult<ImageSize> {
