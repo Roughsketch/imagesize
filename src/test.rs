@@ -46,8 +46,8 @@ fn jpeg_extra_info_test() {
 #[test]
 fn png_test() {
     let dim = size("test/test.png").unwrap();
-    assert_eq!(dim.width, 2000);
-    assert_eq!(dim.height, 2000);
+    assert_eq!(dim.width, 690);
+    assert_eq!(dim.height, 298);
 }
 
 #[test]
