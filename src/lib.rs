@@ -233,7 +233,8 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
     read_u32(reader, &Endian::Big)?;    //  Discard junk value
     let width = read_u32(reader, &Endian::Big)? as usize;
     let height = read_u32(reader, &Endian::Big)? as usize;
-    return Ok(ImageSize { width, height });
+
+    Ok(ImageSize { width, height })
 }
 
 fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<()> {
@@ -262,7 +263,7 @@ fn jpeg_size<R: BufRead + Seek>(reader: &mut R, _offset: usize) -> ImageResult<I
 
     loop {
         //  Read until it hits the next potential marker
-        let read_bytes = reader.read_until(0xFF, &mut search)?;
+        reader.read_until(0xFF, &mut search)?;
 
         loop {
             reader.read_exact(&mut page)?;
@@ -372,16 +373,16 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
         }
 
         //  If we've read both values we need, return the data
-        if width.is_some() && height.is_some() {
+        if let (Some(width), Some(height)) = (width, height) {
             return Ok(ImageSize {
-                width: width.unwrap() as usize,
-                height: height.unwrap() as usize,
+                width: width as usize,
+                height: height as usize,
             });
         }
     }
 
     //  If no width/height pair was found return invalid data
-    return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "No dimensions in IFD tags").into())
+    Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "No dimensions in IFD tags").into())
 }
 
 fn webp_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
@@ -429,7 +430,7 @@ fn read_u24<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> ImageResu
 
     match endianness {
         Endian::Little => Ok(((buf[2] as u32) << 16) | ((buf[1] as u32) << 8) | (buf[0] as u32)),
-        Endian::Big => Ok(((buf[0] as u32) << 16) | ((buf[1] as u32) << 8) | ((buf[2] as u32))),
+        Endian::Big => Ok(((buf[0] as u32) << 16) | ((buf[1] as u32) << 8) | (buf[2] as u32)),
     }
 }
 
