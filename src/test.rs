@@ -120,3 +120,10 @@ fn issue_9_test() {
     assert_eq!(dim.width, 1360);
     assert_eq!(dim.height, 1904);
 }
+
+#[test]
+fn jpg_unexpected_eof() {
+    let dim = size("test/unexpected_eof.jpg").unwrap();
+    assert_eq!(dim.width, 3047);
+    assert_eq!(dim.height, 2008);
+}

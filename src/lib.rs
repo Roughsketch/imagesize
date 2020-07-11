@@ -287,8 +287,6 @@ fn jpeg_size<R: BufRead + Seek>(reader: &mut R, _offset: usize) -> ImageResult<I
                 return Err(ImageError::CorruptedImage);
             }
         }
-
-        reader.consume(1);
     }
 
     Ok(ImageSize {
