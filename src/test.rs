@@ -113,3 +113,10 @@ fn gif_blob_too_small_test() {
     let data = vec![0x47, 0x49, 0x46, 0x38];
     assert_eq!(blob_size(&data).is_err(), true);
 }
+
+#[test]
+fn issue_9_test() {
+    let dim = size("test/issue-9.jpg").unwrap();
+    assert_eq!(dim.width, 1360);
+    assert_eq!(dim.height, 1904);
+}
