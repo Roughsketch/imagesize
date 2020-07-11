@@ -262,8 +262,15 @@ fn jpeg_size<R: BufRead + Seek>(reader: &mut R, _offset: usize) -> ImageResult<I
 
     loop {
         //  Read until it hits the next potential marker
-        reader.read_until(0xFF, &mut search)?;
-        reader.read_exact(&mut page)?;
+        let read_bytes = reader.read_until(0xFF, &mut search)?;
+
+        loop {
+            reader.read_exact(&mut page)?;
+
+            if page[0] != 0xFF {
+                break;
+            }
+        }
         
         if page[0] == 0xC0 || page[0] == 0xC2 {
             //  Only get outside image size
