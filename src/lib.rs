@@ -358,7 +358,7 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
             //  Not a tag we care about. Just figure out how much data to skip.
             let kind = read_u16(reader, &endianness)?;
             let count = read_u32(reader, &endianness)? as usize;
-            
+
             let skip_count = match kind {
                 1 | 2 => count, //  Byte | ASCII both skip count bytes
                 3 => count * 2, //  Shorts are 2 bytes each
