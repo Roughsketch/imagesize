@@ -8,3 +8,5 @@ Cargo.lock
 
 /fuzz/
 afl_fuzz_target/
+
+crashpad/
