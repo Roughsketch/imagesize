@@ -240,6 +240,11 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
         //  Find ispe tag which has spatial dimensions, or irot which controls orientation
         match next_tag(reader) {
             Ok((tag, size)) => {
+                //  Size of tag length + tag cannot be under 8 (4 bytes each)
+                if size < 8 {
+                    return Err(ImageError::CorruptedImage);
+                }
+
                 //  ispe tag has a junk value followed by width and height as u32
                 if tag == "ispe" {
                     found_ispe = true;
