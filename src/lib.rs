@@ -227,17 +227,77 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
     skip_to_tag(reader, b"meta")?;
     read_u32(reader, &Endian::Big)?;    //  Meta has a junk value after it
     skip_to_tag(reader, b"iprp")?;      //  Find iprp tag
-    skip_to_tag(reader, b"ipco")?;      //  Find ipco tag
-    skip_to_tag(reader, b"ispe")?;      //  Find ispe tag which has spatial dimensions
 
-    read_u32(reader, &Endian::Big)?;    //  Discard junk value
-    let width = read_u32(reader, &Endian::Big)? as usize;
-    let height = read_u32(reader, &Endian::Big)? as usize;
+    let mut max_offset = skip_to_tag(reader, b"ipco")?;      //  Find iprp tag
 
-    Ok(ImageSize { width, height })
+    //  Keep track of the max size of ipco tag
+    let mut max_width = 0usize;
+    let mut max_height = 0usize;
+    let mut found_ispe = false;
+
+    loop {
+        //  Find ispe tag which has spatial dimensions
+        match skip_to_tag_limit(reader, b"ispe", max_offset) {
+            Ok(new_offset) => {
+                found_ispe = true;
+                max_offset = new_offset;
+            }
+            Err(_) => break,
+        }
+
+        read_u32(reader, &Endian::Big)?;    //  Discard junk value
+        let width = read_u32(reader, &Endian::Big)? as usize;
+        let height = read_u32(reader, &Endian::Big)? as usize;
+        
+        //  Assign new largest size by area
+        if width * height > max_width * max_height {
+            max_width = width;
+            max_height = height;
+        }
+    }
+
+    if !found_ispe {
+        return Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Not enough data").into());
+    }
+
+    Ok(ImageSize { 
+        width: max_width,
+        height: max_height 
+    })
 }
 
-fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<()> {
+/// Returns the amount of bytes left to read from limit
+fn skip_to_tag_limit<R: BufRead + Seek>(reader: &mut R, tag: &[u8], mut limit: u32) -> ImageResult<u32> {
+    let mut tag_buf = [0; 4];
+
+    loop {
+        if limit <= 8 {
+            return Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Not enough data").into());
+        }
+
+        let size = read_u32(reader, &Endian::Big)?;
+        reader.read_exact(&mut tag_buf)?;
+        limit -= 8;
+
+        if tag_buf == tag {
+            return Ok(limit);
+        }
+
+        if size <= 8 {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Invalid heif box size: {}", size)).into());
+        }
+
+        reader.consume((size - 8) as usize);
+
+        if limit <= size + 8 {
+            return Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Not enough data").into());
+        }
+
+        limit -= size + 8;
+    }
+}
+
+fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32> {
     let mut tag_buf = [0; 4];
 
     loop {
@@ -245,7 +305,7 @@ fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<()>
         reader.read_exact(&mut tag_buf)?;
 
         if tag_buf == tag {
-            return Ok(());
+            return Ok(size);
         }
 
         if size <= 8 {

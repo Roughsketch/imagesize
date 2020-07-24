@@ -144,6 +144,13 @@ fn fuzzer_crashes_fixed() {
     }
 }
 
+#[test]
+fn heif_multi_picks_largest() {
+    let dim = size("test/IMG_0007.heic").unwrap();
+    assert_eq!(dim.width, 3264);
+    assert_eq!(dim.height, 2448);
+}
+
 fn get_file_as_byte_vec(filename: std::path::PathBuf) -> Vec<u8> {
     use std::fs;
     let mut f = File::open(&filename).expect("no file found");
