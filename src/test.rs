@@ -1,5 +1,5 @@
 #[cfg(test)]
-use ::*;
+use crate::{size, blob_size};
 
 #[test]
 fn apng_test() {
@@ -174,7 +174,9 @@ fn heif_multi_picks_largest() {
 
 fn get_file_as_byte_vec(filename: std::path::PathBuf) -> Vec<u8> {
     use std::fs;
-    let mut f = File::open(&filename).expect("no file found");
+    use std::io::Read;
+    
+    let mut f = fs::File::open(&filename).expect("no file found");
     let metadata = fs::metadata(&filename).expect("unable to read metadata");
     let mut buffer = vec![0; metadata.len() as usize];
     f.read(&mut buffer).expect("buffer overflow");
