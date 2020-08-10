@@ -325,6 +325,7 @@ fn jpeg_size<R: BufRead + Seek>(reader: &mut R, _offset: usize) -> ImageResult<I
         loop {
             reader.read_exact(&mut page)?;
 
+            //  Skip repeated FF tags since it's possible to get something like FF FF C0
             if page[0] != 0xFF {
                 break;
             }
