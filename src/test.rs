@@ -136,6 +136,20 @@ fn jpg_unexpected_eof_2() {
 }
 
 #[test]
+fn jpg_unexpected_eof_3() {
+    let dim = size("test/unexpected_eof_3.jpg").unwrap();
+    assert_eq!(dim.width, 2995);
+    assert_eq!(dim.height, 1998);
+}
+
+#[test]
+fn jpg_wrong_size() {
+    let dim = size("test/wrong_size.jpg").unwrap();
+    assert_eq!(dim.width, 1080);
+    assert_eq!(dim.height, 1080);
+}
+
+#[test]
 fn fuzzer_crashes_fixed() {
     use std::{fs, io};
 
