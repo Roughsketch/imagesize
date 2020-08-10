@@ -314,41 +314,44 @@ fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32
 }
 
 fn jpeg_size<R: BufRead + Seek>(reader: &mut R, _offset: usize) -> ImageResult<ImageSize> {
-    let mut search = Vec::new();
-    let mut page = [0; 1];
+    let mut marker = [0; 2];
     let mut depth = 0i32;
 
+    //  Go to the first tag after FF D8
+    reader.seek(SeekFrom::Start(2))?;
+
     loop {
-        //  Read until it hits the next potential marker
-        reader.read_until(0xFF, &mut search)?;
+        //  Read current marker (FF XX)
+        reader.read_exact(&mut marker)?;
 
-        loop {
-            reader.read_exact(&mut page)?;
-
-            //  Skip repeated FF tags since it's possible to get something like FF FF C0
-            if page[0] != 0xFF {
-                break;
-            }
+        if marker[0] != 0xFF {
+            //  Did not read a marker. Assume image is corrupt.
+            return Err(ImageError::CorruptedImage);
         }
+
+        let page = marker[1];
         
-        if  (page[0] >= 0xC0 && page[0] <= 0xC3) ||
-            (page[0] >= 0xC5 && page[0] <= 0xC7) ||
-            (page[0] >= 0xC9 && page[0] <= 0xCB) ||
-            (page[0] >= 0xCD && page[0] <= 0xCF) {
+        //  Check for valid SOFn markers. C4, C8, and CC aren't dimension markers.
+        if  (page >= 0xC0 && page <= 0xC3) || (page >= 0xC5 && page <= 0xC7) ||
+            (page >= 0xC9 && page <= 0xCB) || (page >= 0xCD && page <= 0xCF) {
             //  Only get outside image size
             if depth == 0 {
                 //  Correct marker, go forward 3 bytes so we're at height offset
-                reader.consume(3);
+                reader.seek(SeekFrom::Current(3))?;
                 break;
             }
-        } else if page[0] == 0xD8 {
+        } else if page == 0xD8 {
             depth += 1;
-        } else if page[0] == 0xD9 {
+        } else if page == 0xD9 {
             depth -= 1;
             if depth < 0 {
                 return Err(ImageError::CorruptedImage);
             }
-        }
+        }    
+        
+        //  Read the marker length and skip over it entirely
+        let page_size = read_u16(reader, &Endian::Big)? as i64;
+        reader.seek(SeekFrom::Current(page_size - 2))?;
     }
 
     Ok(ImageSize {
