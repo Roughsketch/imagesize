@@ -4,9 +4,6 @@ use std::fs::File;
 use std::path::Path;
 use std::io::{BufRead, BufReader, Cursor, Read, Seek, SeekFrom};
 
-#[cfg(test)] 
-mod test;
-
 /// An Error type used in failure cases.
 #[derive(Debug)]
 pub enum ImageError {
