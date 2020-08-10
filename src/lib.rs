@@ -331,7 +331,10 @@ fn jpeg_size<R: BufRead + Seek>(reader: &mut R, _offset: usize) -> ImageResult<I
             }
         }
         
-        if page[0] >= 0xC0 && page[0] <= 0xCF {
+        if  (page[0] >= 0xC0 && page[0] <= 0xC3) ||
+            (page[0] >= 0xC5 && page[0] <= 0xC7) ||
+            (page[0] >= 0xC9 && page[0] <= 0xCB) ||
+            (page[0] >= 0xCD && page[0] <= 0xCF) {
             //  Only get outside image size
             if depth == 0 {
                 //  Correct marker, go forward 3 bytes so we're at height offset
