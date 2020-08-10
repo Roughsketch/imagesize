@@ -13,6 +13,7 @@ imagesize = "0.8"
 ```
 
 ## Supported Image Formats
+If an image format is missing feel free to make an issue to suggest adding it.
 * BMP
 * GIF
 * HEIC / HEIF
