@@ -236,41 +236,35 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
     let mut found_ispe = false;
     let mut rotation = 0u8;
 
-    loop {
-        //  Find ispe tag which has spatial dimensions, or irot which controls orientation
-        match next_tag(reader) {
-            Ok((tag, size)) => {
-                //  Size of tag length + tag cannot be under 8 (4 bytes each)
-                if size < 8 {
-                    return Err(ImageError::CorruptedImage);
-                }
+    while let Ok((tag, size)) = next_tag(reader) {
+        //  Size of tag length + tag cannot be under 8 (4 bytes each)
+        if size < 8 {
+            return Err(ImageError::CorruptedImage);
+        }
 
-                //  ispe tag has a junk value followed by width and height as u32
-                if tag == "ispe" {
-                    found_ispe = true;
-                    read_u32(reader, &Endian::Big)?;    //  Discard junk value
-                    let width = read_u32(reader, &Endian::Big)? as usize;
-                    let height = read_u32(reader, &Endian::Big)? as usize;
-                    
-                    //  Assign new largest size by area
-                    if width * height > max_width * max_height {
-                        max_width = width;
-                        max_height = height;
-                    }
-                } else if tag == "irot" {
-                    //  irot is 9 bytes total: size, tag, 1 byte for rotation (0-3)
-                    rotation = read_u8(reader)?;
-                } else if size >= ipco_size {
-                    //  If we've gone past the ipco boundary, then break
-                    break;
-                } else {
-                    //  If we're still inside ipco, consume all bytes for
-                    //  the current tag, minus the bytes already read in `next_tag`
-                    ipco_size -= size;
-                    reader.consume(size - 8);
-                }
+        //  ispe tag has a junk value followed by width and height as u32
+        if tag == "ispe" {
+            found_ispe = true;
+            read_u32(reader, &Endian::Big)?;    //  Discard junk value
+            let width = read_u32(reader, &Endian::Big)? as usize;
+            let height = read_u32(reader, &Endian::Big)? as usize;
+            
+            //  Assign new largest size by area
+            if width * height > max_width * max_height {
+                max_width = width;
+                max_height = height;
             }
-            Err(_) => break,
+        } else if tag == "irot" {
+            //  irot is 9 bytes total: size, tag, 1 byte for rotation (0-3)
+            rotation = read_u8(reader)?;
+        } else if size >= ipco_size {
+            //  If we've gone past the ipco boundary, then break
+            break;
+        } else {
+            //  If we're still inside ipco, consume all bytes for
+            //  the current tag, minus the bytes already read in `next_tag`
+            ipco_size -= size;
+            reader.consume(size - 8);
         }
     }
 
@@ -282,9 +276,7 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
     //  Rotation can only be 0-3. 1 and 3 are 90 and 270 degrees respectively (anti-clockwise)
     //  If we have 90 or 270 rotation, flip width and height
     if rotation == 1 || rotation == 3 {
-        let temp = max_width;
-        max_width = max_height;
-        max_height = temp;
+        std::mem::swap(&mut max_width, &mut max_height);
     }
 
     Ok(ImageSize { 
@@ -294,12 +286,12 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
 }
 
 /// Returns the amount of bytes left to read from limit
-fn next_tag<'a, R: BufRead + Seek>(reader: &mut R) -> ImageResult<(String, usize)> {
+fn next_tag<R: BufRead + Seek>(reader: &mut R) -> ImageResult<(String, usize)> {
     let mut tag_buf = [0; 4];
     let size = read_u32(reader, &Endian::Big)? as usize;
     reader.read_exact(&mut tag_buf)?;
 
-    return Ok((String::from_utf8_lossy(&tag_buf).into_owned(), size));
+    Ok((String::from_utf8_lossy(&tag_buf).into_owned(), size))
 }
 
 fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32> {
@@ -512,5 +504,5 @@ fn read_u16<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> ImageResu
 fn read_u8<R: BufRead + Seek>(reader: &mut R) -> ImageResult<u8> {
     let mut buf = [0; 1];
     reader.read_exact(&mut buf)?;
-    return Ok(buf[0]);
+    Ok(buf[0])
 }
