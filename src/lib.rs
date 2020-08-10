@@ -455,8 +455,12 @@ fn webp_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
 
     if buffer[3] == b' ' {
         webp_vp8_size(reader, header.len() + buffer.len())
-    } else {
+    } else if buffer[3] == b'L' {
+        webp_vp8l_size(reader, header.len() + buffer.len())
+    } else if buffer[3] == b'X' {
         webp_vp8x_size(reader, header.len() + buffer.len())
+    } else {
+        Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid VP8 Tag").into())
     }
 }
 
@@ -466,6 +470,17 @@ fn webp_vp8x_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResu
     Ok(ImageSize {
         width: read_u24(reader, &Endian::Little)? as usize + 1,
         height: read_u24(reader, &Endian::Little)? as usize + 1,
+    })
+}
+
+fn webp_vp8l_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResult<ImageSize> {
+    reader.consume(0x15 - offset);
+
+    let dims = read_u32(reader, &Endian::Little)?;
+
+    Ok(ImageSize {
+        width: (dims & 0x3FFF) as usize + 1,
+        height: ((dims >> 14) & 0x3FFF) as usize + 1,
     })
 }
 

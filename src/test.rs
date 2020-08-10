@@ -79,6 +79,27 @@ fn riffx_webp_test() {
 }
 
 #[test]
+fn webp_extended() {
+    let dim = size("test/webp/extended.16x32.webp").unwrap();
+    assert_eq!(dim.width, 16);
+    assert_eq!(dim.height, 32);
+}
+
+#[test]
+fn webp_lossless() {
+    let dim = size("test/webp/lossless.16x32.webp").unwrap();
+    assert_eq!(dim.width, 16);
+    assert_eq!(dim.height, 32);
+}
+
+#[test]
+fn webp_lossy() {
+    let dim = size("test/webp/lossy.16x32.webp").unwrap();
+    assert_eq!(dim.width, 16);
+    assert_eq!(dim.height, 32);
+}
+
+#[test]
 fn blob_test() {
     //  PNG Header with size 123x321
     let data = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 
