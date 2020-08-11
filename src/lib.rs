@@ -101,24 +101,6 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
     Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Not enough data").into())
 }
 
-/// Calls the correct image size method based on the image type
-///
-/// # Arguments
-/// * `reader` - A reader for the data
-/// * `header` - The header of the file
-fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
-    match image_type(&header)? {
-        ImageType::Bmp => bmp_size(reader),
-        ImageType::Gif => gif_size(header),
-        ImageType::Heif => heif_size(reader),
-        ImageType::Jpeg => jpeg_size(reader),
-        ImageType::Png => png_size(reader),
-        ImageType::Psd => psd_size(reader),
-        ImageType::Tiff => tiff_size(reader),
-        ImageType::Webp => webp_size(reader),
-    }
-}
-
 /// Get the image size from a local file
 ///
 /// # Arguments
@@ -195,6 +177,24 @@ pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
     reader.read_exact(&mut header)?;
 
     dispatch_header(&mut reader, &header)
+}
+
+/// Calls the correct image size method based on the image type
+///
+/// # Arguments
+/// * `reader` - A reader for the data
+/// * `header` - The header of the file
+fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
+    match image_type(&header)? {
+        ImageType::Bmp => bmp_size(reader),
+        ImageType::Gif => gif_size(header),
+        ImageType::Heif => heif_size(reader),
+        ImageType::Jpeg => jpeg_size(reader),
+        ImageType::Png => png_size(reader),
+        ImageType::Psd => psd_size(reader),
+        ImageType::Tiff => tiff_size(reader),
+        ImageType::Webp => webp_size(reader),
+    }
 }
 
 fn bmp_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
