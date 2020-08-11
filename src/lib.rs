@@ -108,14 +108,14 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 /// * `header` - The header of the file
 fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
     match image_type(&header)? {
-        ImageType::Bmp => bmp_size(reader, header.len()),
+        ImageType::Bmp => bmp_size(reader),
         ImageType::Gif => gif_size(header),
-        ImageType::Heif => heif_size(reader, header),
-        ImageType::Jpeg => jpeg_size(reader, header.len()),
-        ImageType::Png => png_size(reader, header.len()),
-        ImageType::Psd => psd_size(reader, header.len()),
-        ImageType::Tiff => tiff_size(reader, header),
-        ImageType::Webp => webp_size(reader, header),
+        ImageType::Heif => heif_size(reader),
+        ImageType::Jpeg => jpeg_size(reader),
+        ImageType::Png => png_size(reader),
+        ImageType::Psd => psd_size(reader),
+        ImageType::Tiff => tiff_size(reader),
+        ImageType::Webp => webp_size(reader),
     }
 }
 
@@ -197,8 +197,8 @@ pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
     dispatch_header(&mut reader, &header)
 }
 
-fn bmp_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResult<ImageSize> {
-    reader.consume(0x12 - offset);
+fn bmp_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    reader.seek(SeekFrom::Start(0x12))?;
 
     Ok(ImageSize {
         width: read_u32(reader, &Endian::Little)? as usize,
@@ -213,9 +213,10 @@ fn gif_size(header: &[u8]) -> ImageResult<ImageSize> {
     })
 }
 
-fn heif_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
+fn heif_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    reader.seek(SeekFrom::Start(0))?;
     //  Read the ftyp header size
-    let ftyp_size = read_u32(&mut Cursor::new(&header[0..]), &Endian::Big)?;
+    let ftyp_size = read_u32(reader, &Endian::Big)?;
 
     //  Jump to the first actual box offset
     reader.seek(SeekFrom::Start(ftyp_size.into()))?;
@@ -261,7 +262,7 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
             //  If we're still inside ipco, consume all bytes for
             //  the current tag, minus the bytes already read in `next_tag`
             ipco_size -= size;
-            reader.consume(size - 8);
+            reader.seek(SeekFrom::Current(size as i64 - 8))?;
         }
     }
 
@@ -306,11 +307,11 @@ fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Invalid heif box size: {}", size)).into());
         }
 
-        reader.consume((size - 8) as usize);
+        reader.seek(SeekFrom::Current(size as i64 - 8))?;
     }
 }
 
-fn jpeg_size<R: BufRead + Seek>(reader: &mut R, _offset: usize) -> ImageResult<ImageSize> {
+fn jpeg_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     let mut marker = [0; 2];
     let mut depth = 0i32;
 
@@ -357,8 +358,8 @@ fn jpeg_size<R: BufRead + Seek>(reader: &mut R, _offset: usize) -> ImageResult<I
     })
 }
 
-fn png_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResult<ImageSize> {
-    reader.consume(16 - offset);
+fn png_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    reader.seek(SeekFrom::Start(0x10))?;
 
     Ok(ImageSize {
         width: read_u32(reader, &Endian::Big)? as usize,
@@ -366,8 +367,8 @@ fn png_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResult<Ima
     })
 }
 
-fn psd_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResult<ImageSize> {
-    reader.consume(14 - offset);
+fn psd_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    reader.seek(SeekFrom::Start(0x0E))?;
 
     Ok(ImageSize {
         height: read_u32(reader, &Endian::Big)? as usize,
@@ -375,11 +376,16 @@ fn psd_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResult<Ima
     })
 }
 
-fn tiff_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
+fn tiff_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    reader.seek(SeekFrom::Start(0))?;
+
+    let mut endian_marker = [0; 2];
+    reader.read_exact(&mut endian_marker)?;
+
     //  Get the endianness which determines how we read the input
-    let endianness = if &header[0..2] == b"II" {
+    let endianness = if &endian_marker[0..2] == b"II" {
         Endian::Little
-    } else if &header[0..2] == b"MM" {
+    } else if &endian_marker[0..2] == b"MM" {
         Endian::Big
     } else {
         //  Shouldn't get here by normal means, but handle invalid header anyway
@@ -387,7 +393,8 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
     };
 
     //  Read the IFD offset from the header
-    let ifd_offset = read_u32(&mut Cursor::new(&header[4..]), &endianness)?;
+    reader.seek(SeekFrom::Start(4))?;
+    let ifd_offset = read_u32(reader, &endianness)?;
 
     //  IFD offset cannot be 0
     if ifd_offset == 0 {
@@ -408,17 +415,17 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
         //  Tag 0x100 is the image width, 0x101 is image height
         if tag == 0x100 {
             //  Skip the type/count since we just need the value
-            reader.consume(6);
+            reader.seek(SeekFrom::Current(6))?;
             width = Some(read_u32(reader, &endianness)?);
         }
         else if tag == 0x101 {
             //  Skip the type/count since we just need the value
-            reader.consume(6);
+            reader.seek(SeekFrom::Current(6))?;
             height = Some(read_u32(reader, &endianness)?);
         } else {
             //  Not a tag we care about. Just figure out how much data to skip.
             let kind = read_u16(reader, &endianness)?;
-            let count = read_u32(reader, &endianness)? as usize;
+            let count = read_u32(reader, &endianness)? as i64;
 
             let skip_count = match kind {
                 1 | 2 => count, //  Byte | ASCII both skip count bytes
@@ -430,7 +437,7 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
             };
 
             //  Skip the amount determined
-            reader.consume(skip_count);
+            reader.seek(SeekFrom::Current(skip_count))?;
         }
 
         //  If we've read both values we need, return the data
@@ -446,23 +453,23 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<Im
     Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "No dimensions in IFD tags").into())
 }
 
-fn webp_size<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
+fn webp_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     let mut buffer = [0; 4];
     reader.read_exact(&mut buffer)?;
 
     if buffer[3] == b' ' {
-        webp_vp8_size(reader, header.len() + buffer.len())
+        webp_vp8_size(reader)
     } else if buffer[3] == b'L' {
-        webp_vp8l_size(reader, header.len() + buffer.len())
+        webp_vp8l_size(reader)
     } else if buffer[3] == b'X' {
-        webp_vp8x_size(reader, header.len() + buffer.len())
+        webp_vp8x_size(reader)
     } else {
         Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid VP8 Tag").into())
     }
 }
 
-fn webp_vp8x_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResult<ImageSize> {
-    reader.consume(0x18 - offset);
+fn webp_vp8x_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    reader.seek(SeekFrom::Start(0x18))?;
 
     Ok(ImageSize {
         width: read_u24(reader, &Endian::Little)? as usize + 1,
@@ -470,8 +477,8 @@ fn webp_vp8x_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResu
     })
 }
 
-fn webp_vp8l_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResult<ImageSize> {
-    reader.consume(0x15 - offset);
+fn webp_vp8l_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    reader.seek(SeekFrom::Start(0x15))?;
 
     let dims = read_u32(reader, &Endian::Little)?;
 
@@ -481,8 +488,8 @@ fn webp_vp8l_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResu
     })
 }
 
-fn webp_vp8_size<R: BufRead + Seek>(reader: &mut R, offset: usize) -> ImageResult<ImageSize> {
-    reader.consume(0x1A - offset);
+fn webp_vp8_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    reader.seek(SeekFrom::Start(0x1A))?;
 
     Ok(ImageSize {
         width: read_u16(reader, &Endian::Little)? as usize,
