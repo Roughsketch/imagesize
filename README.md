@@ -17,6 +17,7 @@ imagesize = "0.8"
 * GIF
 * HEIC / HEIF
 * JPEG
+* JPEG XL
 * PNG
 * PSD / PSB
 * TIFF
