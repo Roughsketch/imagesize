@@ -418,7 +418,7 @@ fn jxl_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
                 let mut jxlp_index = [0; 4];
                 reader.read_exact(&mut jxlp_index)?;
 
-                if box_size - box_header_size < 4 && box_size != 0 {
+                if box_size != 0 && box_size - box_header_size < 4 {
                     return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Invalid size for jxlp box: {}", box_size)).into());
                 }
 
@@ -426,6 +426,10 @@ fn jxl_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
                     0 => 16 - header_size,
                     _ => std::cmp::min(box_size - box_header_size - 4, 16 - header_size as u64) as usize + header_size,
                 };
+
+                if read_end < header_size {
+                    return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Invalid read end: {}", read_end)).into());
+                }
 
                 header_size += reader.read(&mut file_header[header_size..read_end])?;
 
