@@ -172,7 +172,7 @@ pub fn size<P>(path: P) -> ImageResult<ImageSize> where P: AsRef<Path> {
 ///
 /// [`ImageError`]: enum.ImageError.html
 pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
-    let mut reader = Cursor::new(&data[..]);
+    let mut reader = Cursor::new(data);
 
     let mut header = [0; 12];
     reader.read_exact(&mut header)?;
@@ -332,8 +332,8 @@ fn jpeg_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         let page = marker[1];
 
         //  Check for valid SOFn markers. C4, C8, and CC aren't dimension markers.
-        if  (page >= 0xC0 && page <= 0xC3) || (page >= 0xC5 && page <= 0xC7) ||
-            (page >= 0xC9 && page <= 0xCB) || (page >= 0xCD && page <= 0xCF) {
+        if  (0xC0..=0xC3).contains(&page) || (0xC5..=0xC7).contains(&page) ||
+            (0xC9..=0xCB).contains(&page) || (0xCD..=0xCF).contains(&page) {
             //  Only get outside image size
             if depth == 0 {
                 //  Correct marker, go forward 3 bytes so we're at height offset
