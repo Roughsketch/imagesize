@@ -4,6 +4,9 @@ use std::fs::File;
 use std::path::Path;
 use std::io::{BufRead, BufReader, Cursor, Read, Seek, SeekFrom};
 
+mod util;
+use crate::util::*;
+
 /// An Error type used in failure cases.
 #[derive(Debug)]
 pub enum ImageError {
@@ -57,12 +60,6 @@ pub struct ImageSize {
     pub width: usize,
     /// Height of an image in pixels.
     pub height: usize,
-}
-
-/// Used for TIFF decoding
-enum Endian {
-    Little,
-    Big,
 }
 
 /// Get the image type from a header
@@ -660,48 +657,4 @@ fn webp_vp8_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         width: read_u16(reader, &Endian::Little)? as usize,
         height: read_u16(reader, &Endian::Little)? as usize,
     })
-}
-
-fn read_u32<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> ImageResult<u32> {
-    let mut buf = [0; 4];
-    reader.read_exact(&mut buf)?;
-
-    match endianness {
-        Endian::Little => Ok(((buf[3] as u32) << 24) | ((buf[2] as u32) << 16) | ((buf[1] as u32) << 8) | (buf[0] as u32)),
-        Endian::Big => Ok(((buf[0] as u32) << 24) | ((buf[1] as u32) << 16) | ((buf[2] as u32) << 8) | (buf[3] as u32)),
-    }
-}
-
-fn read_u24<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> ImageResult<u32> {
-    let mut buf = [0; 3];
-    reader.read_exact(&mut buf)?;
-
-    match endianness {
-        Endian::Little => Ok(((buf[2] as u32) << 16) | ((buf[1] as u32) << 8) | (buf[0] as u32)),
-        Endian::Big => Ok(((buf[0] as u32) << 16) | ((buf[1] as u32) << 8) | (buf[2] as u32)),
-    }
-}
-
-fn read_u16<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> ImageResult<u16> {
-    let mut buf = [0; 2];
-    reader.read_exact(&mut buf)?;
-
-    match endianness {
-        Endian::Little => Ok(((buf[1] as u16) << 8) | (buf[0] as u16)),
-        Endian::Big => Ok(((buf[0] as u16) << 8) | (buf[1] as u16)),
-    }
-}
-
-fn read_u8<R: BufRead + Seek>(reader: &mut R) -> ImageResult<u8> {
-    let mut buf = [0; 1];
-    reader.read_exact(&mut buf)?;
-    Ok(buf[0])
-}
-
-fn read_bits(source: u128, num_bits: usize, offset: usize, size: usize) -> ImageResult<usize> {
-    if offset + num_bits < size {
-        Ok((source >> offset) as usize & ((1 << num_bits) - 1))
-    } else {
-        Err(ImageError::CorruptedImage)
-    }
 }
