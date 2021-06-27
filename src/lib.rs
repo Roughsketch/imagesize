@@ -396,19 +396,19 @@ fn jxl_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             let box_end = box_start.checked_add(box_size).ok_or(ImageError::CorruptedImage)?;
             let box_header_size = reader.stream_position()? - box_start;
 
-            if box_size < box_header_size && box_size != 0 {
+            if box_size != 0 && box_size < box_header_size {
                 return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Invalid size for {} box: {}", box_type, box_size)).into());
             }
+
+            let mut box_reader = match box_size {
+                0 => reader.take(file_header.len() as u64),
+                _ => reader.take(box_size - box_header_size),
+            };
 
             // The jxlc box must contain the complete codestream
 
             if box_type == "jxlc" {
-                let read_end = match box_size {
-                    0 => 16,
-                    _ => std::cmp::min(box_size - box_header_size, 16) as usize,
-                };
-
-                header_size = reader.read(&mut file_header[..read_end])?;
+                header_size = box_reader.read(&mut file_header)?;
                 break;
             }
 
@@ -416,22 +416,13 @@ fn jxl_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
             if box_type == "jxlp" {
                 let mut jxlp_index = [0; 4];
-                reader.read_exact(&mut jxlp_index)?;
+                box_reader.read_exact(&mut jxlp_index)?;
 
-                if box_size - box_header_size < 4 && box_size != 0 {
-                    return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Invalid size for jxlp box: {}", box_size)).into());
-                }
-
-                let read_end = match box_size {
-                    0 => 16 - header_size,
-                    _ => std::cmp::min(box_size - box_header_size - 4, 16 - header_size as u64) as usize + header_size,
-                };
-
-                header_size += reader.read(&mut file_header[header_size..read_end])?;
+                header_size += box_reader.read(&mut file_header[header_size..])?;
 
                 // If jxlp_index has the high bit set to 1, this is the final jxlp box
 
-                if header_size == 16 || (jxlp_index[0] & 0x80) != 0 {
+                if header_size == file_header.len() || (jxlp_index[0] & 0x80) != 0 {
                     break;
                 }
             }
