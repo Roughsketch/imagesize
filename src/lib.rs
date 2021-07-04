@@ -1,8 +1,8 @@
 use std::error::Error;
 use std::fmt;
 use std::fs::File;
-use std::path::Path;
 use std::io::{BufRead, BufReader, Cursor, Read, Seek, SeekFrom};
+use std::path::Path;
 
 mod util;
 use crate::util::*;
@@ -84,15 +84,13 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
             return Ok(ImageType::Tiff);
         } else if header.len() >= 4 && &header[0..4] == b"8BPS" {
             return Ok(ImageType::Psd);
-        } else if header.len() >= 8 &&
-            &header[4..8] == b"ftyp" {
+        } else if header.len() >= 8 && &header[4..8] == b"ftyp" {
             return Ok(ImageType::Heif);
-        } else if header.len() >= 12 &&
-            &header[0..4] == b"RIFF" &&
-            &header[8..12] == b"WEBP"{
+        } else if header.len() >= 12 && &header[0..4] == b"RIFF" && &header[8..12] == b"WEBP" {
             return Ok(ImageType::Webp);
-        } else if (header.len() >= 2 && &header[0..2] == b"\xFF\x0A") ||
-            (header.len() >= 12 && &header[0..12] == b"\x00\x00\x00\x0CJXL \x0D\x0A\x87\x0A") {
+        } else if (header.len() >= 2 && &header[0..2] == b"\xFF\x0A")
+            || (header.len() >= 12 && &header[0..12] == b"\x00\x00\x00\x0CJXL \x0D\x0A\x87\x0A")
+        {
             return Ok(ImageType::Jxl);
         } else {
             return Err(ImageError::NotSupported);
@@ -134,7 +132,10 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 /// ```
 ///
 /// [`ImageError`]: enum.ImageError.html
-pub fn size<P>(path: P) -> ImageResult<ImageSize> where P: AsRef<Path> {
+pub fn size<P>(path: P) -> ImageResult<ImageSize>
+where
+    P: AsRef<Path>,
+{
     let file = File::open(path)?;
     let mut reader = BufReader::new(file);
 
@@ -211,7 +212,7 @@ fn bmp_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 fn gif_size(header: &[u8]) -> ImageResult<ImageSize> {
     Ok(ImageSize {
         width:  ((header[6] as usize) | ((header[7] as usize) << 8)),
-        height: ((header[8] as usize) | ((header[9] as usize) << 8))
+        height: ((header[8] as usize) | ((header[9] as usize) << 8)),
     })
 }
 
@@ -228,7 +229,7 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     read_u32(reader, &Endian::Big)?;    //  Meta has a junk value after it
     skip_to_tag(reader, b"iprp")?;      //  Find iprp tag
 
-    let mut ipco_size = skip_to_tag(reader, b"ipco")? as usize;      //  Find ipco tag
+    let mut ipco_size = skip_to_tag(reader, b"ipco")? as usize; //  Find ipco tag
 
     //  Keep track of the max size of ipco tag
     let mut max_width = 0usize;
@@ -245,7 +246,7 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         //  ispe tag has a junk value followed by width and height as u32
         if tag == "ispe" {
             found_ispe = true;
-            read_u32(reader, &Endian::Big)?;    //  Discard junk value
+            read_u32(reader, &Endian::Big)?; //  Discard junk value
             let width = read_u32(reader, &Endian::Big)? as usize;
             let height = read_u32(reader, &Endian::Big)? as usize;
 
@@ -281,7 +282,7 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
     Ok(ImageSize {
         width: max_width,
-        height: max_height
+        height: max_height,
     })
 }
 
@@ -386,11 +387,13 @@ fn jxl_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
                     let mut box_size = [0; 8];
                     reader.read_exact(&mut box_size)?;
                     u64::from_be_bytes(box_size)
-                },
+                }
                 _ => box_size as u64,
             };
 
-            let box_end = box_start.checked_add(box_size).ok_or(ImageError::CorruptedImage)?;
+            let box_end = box_start
+                .checked_add(box_size)
+                .ok_or(ImageError::CorruptedImage)?;
             let box_header_size = reader.stream_position()? - box_start;
 
             if box_size != 0 && box_size < box_header_size {
@@ -443,7 +446,7 @@ fn jxl_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     // Parse the header data
 
     let file_header = u128::from_le_bytes(file_header);
-    let header_size = 8*header_size;
+    let header_size = 8 * header_size;
 
     let is_small = read_bits(file_header, 1, 16, header_size)? != 0;
 
@@ -510,13 +513,16 @@ fn jxl_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
                 false => 0,
                 true => read_bits(file_header, 3, metadata_offset + 2, header_size)?,
             }
-        },
+        }
     };
 
     if orientation < 4 {
         Ok(ImageSize { width, height })
     } else {
-        Ok(ImageSize { width: height, height: width })
+        Ok(ImageSize {
+            width: height,
+            height: width,
+        })
     }
 }
 
@@ -579,8 +585,7 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             //  Skip the type/count since we just need the value
             reader.seek(SeekFrom::Current(6))?;
             width = Some(read_u32(reader, &endianness)?);
-        }
-        else if tag == 0x101 {
+        } else if tag == 0x101 {
             //  Skip the type/count since we just need the value
             reader.seek(SeekFrom::Current(6))?;
             height = Some(read_u32(reader, &endianness)?);

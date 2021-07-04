@@ -1,16 +1,18 @@
 #[cfg(test)]
 use imagesize::blob_size;
 use std::{
-    fs::{File, metadata, read_dir},
+    fs::{metadata, read_dir, File},
     io::{Error, Read},
     path::PathBuf,
 };
 
 #[test]
 fn fuzzer_crashes_fixed() {
-    let mut entries = read_dir("test/fuzz_crashes").unwrap()
+    let mut entries = read_dir("test/fuzz_crashes")
+        .unwrap()
         .map(|res| res.map(|e| e.path()))
-        .collect::<Result<Vec<_>, Error>>().unwrap();
+        .collect::<Result<Vec<_>, Error>>()
+        .unwrap();
 
     entries.sort();
 
