@@ -17,7 +17,7 @@ fn blob_test() {
 #[test]
 fn blob_too_small_test() {
     let data = vec![0x89, 0x00, 0x01, 0x02];
-    assert_eq!(blob_size(&data).is_err(), true);
+    assert!(blob_size(&data).is_err());
 }
 
 #[test]
@@ -28,11 +28,30 @@ fn blob_test_fail() {
                     0x00, 0x00, 0x00, 0x7B, 0x00, 0x00, 0x01, 0x41,
                     0x08, 0x06, 0x00, 0x00, 0x00, 0x9A, 0x38, 0xC4];
 
-    assert_eq!(blob_size(&data).is_err(), true);
+    assert!(blob_size(&data).is_err());
 }
 
 #[test]
 fn gif_blob_too_small_test() {
     let data = vec![0x47, 0x49, 0x46, 0x38];
-    assert_eq!(blob_size(&data).is_err(), true);
+    assert!(blob_size(&data).is_err());
+}
+
+#[test]
+fn blob_test_partial_ico() {
+    let data = vec![
+        // Header (says 6 images are included)
+        0x00, 0x00, 0x01, 0x00, 0x06, 0x00,
+        // Image 1 (16x32)
+        0x10, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        // Image 2 (10x100)
+        0x0A, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        // Image 3 (255x? run out of bytes)
+        0xFF
+    ];
+    let dim = blob_size(&data).unwrap();
+    assert_eq!(dim.width, 10);
+    assert_eq!(dim.height, 100);
 }
