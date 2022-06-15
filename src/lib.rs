@@ -51,15 +51,28 @@ pub enum ImageType {
     Psd,
     Tiff,
     Webp,
+    Ico,
 }
 
 /// Holds the size information of an image.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ImageSize {
     /// Width of an image in pixels.
     pub width: usize,
     /// Height of an image in pixels.
     pub height: usize,
+}
+
+impl Ord for ImageSize {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        (self.width * self.height).cmp(&(other.width * other.height))
+    }
+}
+
+impl PartialOrd for ImageSize {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 /// Get the image type from a header
@@ -71,33 +84,33 @@ pub struct ImageSize {
 ///
 /// This will check the header to determine what image type the data is.
 pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
-    if header.len() >= 2 {
-        if &header[0..2] == b"\x42\x4D" {
-            return Ok(ImageType::Bmp);
-        } else if header.len() >= 3 && &header[0..3] == b"\xFF\xD8\xFF" {
-            return Ok(ImageType::Jpeg);
-        } else if header.len() >= 4 && &header[0..4] == b"\x89PNG" {
-            return Ok(ImageType::Png);
-        } else if header.len() >= 4 && &header[0..4] == b"GIF8" {
-            return Ok(ImageType::Gif);
-        } else if header.len() >= 4 && (&header[0..4] == b"II\x2A\x00" || &header[0..4] == b"MM\x00\x2A") {
-            return Ok(ImageType::Tiff);
-        } else if header.len() >= 4 && &header[0..4] == b"8BPS" {
-            return Ok(ImageType::Psd);
-        } else if header.len() >= 8 && &header[4..8] == b"ftyp" {
-            return Ok(ImageType::Heif);
-        } else if header.len() >= 12 && &header[0..4] == b"RIFF" && &header[8..12] == b"WEBP" {
-            return Ok(ImageType::Webp);
-        } else if (header.len() >= 2 && &header[0..2] == b"\xFF\x0A")
-            || (header.len() >= 12 && &header[0..12] == b"\x00\x00\x00\x0CJXL \x0D\x0A\x87\x0A")
-        {
-            return Ok(ImageType::Jxl);
-        } else {
-            return Err(ImageError::NotSupported);
-        }
+    if header.len() < 2 {
+        Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Not enough data").into())
+    } else if header.starts_with(b"\x42\x4D") {
+        Ok(ImageType::Bmp)
+    } else if header.starts_with(b"\xFF\xD8\xFF") {
+        Ok(ImageType::Jpeg)
+    } else if header.starts_with(b"\x89PNG") {
+        Ok(ImageType::Png)
+    } else if header.starts_with(b"GIF8") {
+        Ok(ImageType::Gif)
+    } else if header.starts_with(b"II\x2A\x00") || header.starts_with(b"MM\x00\x2A") {
+        Ok(ImageType::Tiff)
+    } else if header.starts_with(b"8BPS") {
+        Ok(ImageType::Psd)
+    } else if header.starts_with(&[0, 0, 1, 0]) {
+        Ok(ImageType::Ico)
+    } else if header.len() >= 8 && &header[4..8] == b"ftyp" {
+        Ok(ImageType::Heif)
+    } else if header.len() >= 12 && &header[0..4] == b"RIFF" && &header[8..12] == b"WEBP" {
+        Ok(ImageType::Webp)
+    } else if header.starts_with(b"\xFF\x0A")
+        || header.starts_with(b"\x00\x00\x00\x0CJXL \x0D\x0A\x87\x0A")
+    {
+        Ok(ImageType::Jxl)
+    } else {
+        Err(ImageError::NotSupported)
     }
-
-    Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Not enough data").into())
 }
 
 /// Get the image size from a local file
@@ -187,7 +200,7 @@ pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
 /// * `reader` - A reader for the data
 /// * `header` - The header of the file
 fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
-    match image_type(&header)? {
+    match image_type(header)? {
         ImageType::Bmp => bmp_size(reader),
         ImageType::Gif => gif_size(header),
         ImageType::Heif => heif_size(reader),
@@ -197,6 +210,7 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageRes
         ImageType::Psd => psd_size(reader),
         ImageType::Tiff => tiff_size(reader),
         ImageType::Webp => webp_size(reader),
+        ImageType::Ico => ico_size(reader),
     }
 }
 
@@ -661,5 +675,33 @@ fn webp_vp8_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     Ok(ImageSize {
         width: read_u16(reader, &Endian::Little)? as usize,
         height: read_u16(reader, &Endian::Little)? as usize,
+    })
+}
+
+fn ico_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    reader.seek(SeekFrom::Start(4))?;
+    let img_count = read_u16(reader, &Endian::Little)?;
+    let mut sizes = Vec::with_capacity(img_count as usize);
+
+    for _ in 0..img_count {
+        if let Ok(size) = ico_image_size(reader) {
+            sizes.push(size)
+        } else {
+            // if we don't have all the bytes of the headers, just
+            // return the largest one found so far
+            break;
+        }
+        // each ICONDIRENTRY (image header) is 16 bytes, skip the last 14
+        reader.seek(SeekFrom::Current(14))?;
+    }
+    sizes.into_iter().max().ok_or(ImageError::CorruptedImage)
+}
+
+/// Reads two bytes to determine an individual image's size within an ICO
+fn ico_image_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    // ICO dimensions are 1-256 pixels, with a byte value of 0 representing 256
+    Ok(ImageSize {
+        width: read_u8(reader)?.wrapping_sub(1) as usize + 1,
+        height: read_u8(reader)?.wrapping_sub(1) as usize + 1,
     })
 }

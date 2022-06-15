@@ -22,8 +22,11 @@ imagesize = "0.9"
 * PSD / PSB
 * TIFF
 * WEBP
+* ICO*
 
 If you have a format you think should be added, feel free to create an issue.
+
+*ICO files can contain multiple images, `imagesize` will give the dimensions of the largest one.
 
 ## Examples
 
