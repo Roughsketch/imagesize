@@ -9,20 +9,20 @@ The goal of this crate is to be able to read the dimensions of a supported image
 Add the following to your Cargo.toml:
 ```toml
 [dependencies]
-imagesize = "0.9"
+imagesize = "0.10"
 ```
 
 ## Supported Image Formats
 * BMP
 * GIF
 * HEIC / HEIF
+* ICO*
 * JPEG
 * JPEG XL
 * PNG
 * PSD / PSB
 * TIFF
 * WEBP
-* ICO*
 
 If you have a format you think should be added, feel free to create an issue.
 
