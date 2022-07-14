@@ -150,12 +150,8 @@ where
     P: AsRef<Path>,
 {
     let file = File::open(path)?;
-    let mut reader = BufReader::new(file);
-
-    let mut header = [0; 12];
-    reader.read_exact(&mut header)?;
-
-    dispatch_header(&mut reader, &header)
+    let reader = BufReader::new(file);
+    reader_size(reader)
 }
 
 /// Get the image size from a block of raw data.
@@ -186,8 +182,47 @@ where
 ///
 /// [`ImageError`]: enum.ImageError.html
 pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
-    let mut reader = Cursor::new(data);
+    let reader = Cursor::new(data);
+    reader_size(reader)
+}
 
+/// Get the image size from a reader
+///
+/// # Arguments
+/// * `reader` - A reader for the data
+///
+/// # Error
+///
+/// This method will return an [`ImageError`] under the following conditions:
+///
+/// * The header isn't recognized as a supported image format
+/// * The data isn't long enough to find the size for the given format
+///
+/// # Examples
+///
+/// ```
+/// use std::io::Cursor;
+/// use imagesize::reader_size;
+///
+/// // PNG Header with size 123x321
+/// let reader = Cursor::new([
+///     0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+///     0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+///     0x00, 0x00, 0x00, 0x7B, 0x00, 0x00, 0x01, 0x41,
+///     0x08, 0x06, 0x00, 0x00, 0x00, 0x9A, 0x38, 0xC4
+/// ]);
+///
+/// match reader_size(reader) {
+///     Ok(dim) => {
+///         assert_eq!(dim.width, 123);
+///         assert_eq!(dim.height, 321);
+///     }
+///     Err(why) => println!("Error getting reader size: {:?}", why)
+/// }
+/// ```
+///
+/// [`ImageError`]: enum.ImageError.html
+pub fn reader_size<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageSize> {
     let mut header = [0; 12];
     reader.read_exact(&mut header)?;
 
