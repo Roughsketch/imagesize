@@ -628,32 +628,41 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
     for _ifd in 0..ifd_count {
         let tag = read_u16(reader, &endianness)?;
+        let kind = read_u16(reader, &endianness)?;
+        let count = read_u32(reader, &endianness)?;
+
+        let value_bytes = match kind {
+            // BYTE | ASCII | SBYTE | UNDEFINED
+            1 | 2 | 6 | 7 => 1,
+            // SHORT | SSHORT
+            3 | 8 => 2,
+            // LONG | SLONG | FLOAT | IFD
+            4 | 9 | 11 | 13 => 4,
+            // RATIONAL | SRATIONAL
+            5 | 10 => 4 * 2,
+            // DOUBLE | LONG8 | SLONG8 | IFD8
+            12 | 16 | 17 | 18 => 8,
+            // Anything else is invalid
+            _ => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid IDF type").into()),
+        };
+
+        let mut value_buffer = [0; 4];
+        reader.read_exact(&mut value_buffer)?;
+
+        let mut r = Cursor::new(&value_buffer[..]);
+        let value = match value_bytes {
+            2 => Some(read_u16(&mut r, &endianness)? as u32),
+            4 => Some(read_u32(&mut r, &endianness)?),
+            _ => None,
+        };
 
         //  Tag 0x100 is the image width, 0x101 is image height
         if tag == 0x100 {
-            //  Skip the type/count since we just need the value
-            reader.seek(SeekFrom::Current(6))?;
-            width = Some(read_u32(reader, &endianness)?);
+            debug_assert_eq!(count, 1);
+            width = value;
         } else if tag == 0x101 {
-            //  Skip the type/count since we just need the value
-            reader.seek(SeekFrom::Current(6))?;
-            height = Some(read_u32(reader, &endianness)?);
-        } else {
-            //  Not a tag we care about. Just figure out how much data to skip.
-            let kind = read_u16(reader, &endianness)?;
-            let count = read_u32(reader, &endianness)? as i64;
-
-            let skip_count = match kind {
-                1 | 2 => count, //  Byte | ASCII both skip count bytes
-                3 => count * 2, //  Shorts are 2 bytes each
-                4 => count * 4, //  Longs are 4 bytes each
-                5 => count * 8, //  Rationals consist of two Longs, so 8 bytes each
-                //  Anything else is invalid
-                _ => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid IDF type").into()),
-            };
-
-            //  Skip the amount determined
-            reader.seek(SeekFrom::Current(skip_count))?;
+            debug_assert_eq!(count, 1);
+            height = value;
         }
 
         //  If we've read both values we need, return the data
