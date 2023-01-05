@@ -112,8 +112,6 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
     } else if header.len() >= 12 && &header[4..6] == b"\xE0\xA5" {
         Ok(ImageType::Aseprite)
     } else {
-        println!("{:?}", &header);
-
         Err(ImageError::NotSupported)
     }
 }
