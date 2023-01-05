@@ -52,6 +52,7 @@ pub enum ImageType {
     Tiff,
     Webp,
     Ico,
+    Aseprite,
 }
 
 /// Holds the size information of an image.
@@ -108,6 +109,8 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
         || header.starts_with(b"\x00\x00\x00\x0CJXL \x0D\x0A\x87\x0A")
     {
         Ok(ImageType::Jxl)
+    } else if header.len() >= 12 && &header[4..6] == b"\xE0\xA5" {
+        Ok(ImageType::Aseprite)
     } else {
         Err(ImageError::NotSupported)
     }
@@ -246,6 +249,7 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageRes
         ImageType::Tiff => tiff_size(reader),
         ImageType::Webp => webp_size(reader),
         ImageType::Ico => ico_size(reader),
+        ImageType::Aseprite => aseprite_size(reader),
     }
 }
 
@@ -260,7 +264,7 @@ fn bmp_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
 fn gif_size(header: &[u8]) -> ImageResult<ImageSize> {
     Ok(ImageSize {
-        width:  ((header[6] as usize) | ((header[7] as usize) << 8)),
+        width: ((header[6] as usize) | ((header[7] as usize) << 8)),
         height: ((header[8] as usize) | ((header[9] as usize) << 8)),
     })
 }
@@ -275,8 +279,8 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
     //  Skip to meta tag which contains all the metadata
     skip_to_tag(reader, b"meta")?;
-    read_u32(reader, &Endian::Big)?;    //  Meta has a junk value after it
-    skip_to_tag(reader, b"iprp")?;      //  Find iprp tag
+    read_u32(reader, &Endian::Big)?; //  Meta has a junk value after it
+    skip_to_tag(reader, b"iprp")?; //  Find iprp tag
 
     let mut ipco_size = skip_to_tag(reader, b"ipco")? as usize; //  Find ipco tag
 
@@ -320,7 +324,9 @@ fn heif_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
     //  If no ispe found, then we have no actual dimension data to use
     if !found_ispe {
-        return Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Not enough data").into());
+        return Err(
+            std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Not enough data").into(),
+        );
     }
 
     //  Rotation can only be 0-3. 1 and 3 are 90 and 270 degrees respectively (anti-clockwise)
@@ -356,7 +362,11 @@ fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32
         }
 
         if size <= 8 {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Invalid heif box size: {}", size)).into());
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Invalid heif box size: {}", size),
+            )
+            .into());
         }
 
         reader.seek(SeekFrom::Current(size as i64 - 8))?;
@@ -382,8 +392,11 @@ fn jpeg_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         let page = marker[1];
 
         //  Check for valid SOFn markers. C4, C8, and CC aren't dimension markers.
-        if  (0xC0..=0xC3).contains(&page) || (0xC5..=0xC7).contains(&page) ||
-            (0xC9..=0xCB).contains(&page) || (0xCD..=0xCF).contains(&page) {
+        if (0xC0..=0xC3).contains(&page)
+            || (0xC5..=0xC7).contains(&page)
+            || (0xC9..=0xCB).contains(&page)
+            || (0xCD..=0xCF).contains(&page)
+        {
             //  Only get outside image size
             if depth == 0 {
                 //  Correct marker, go forward 3 bytes so we're at height offset
@@ -446,7 +459,11 @@ fn jxl_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             let box_header_size = reader.stream_position()? - box_start;
 
             if box_size != 0 && box_size < box_header_size {
-                return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Invalid size for {} box: {}", box_type, box_size)).into());
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("Invalid size for {} box: {}", box_type, box_size),
+                )
+                .into());
             }
 
             let mut box_reader = match box_size {
@@ -489,7 +506,9 @@ fn jxl_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     }
 
     if &file_header[0..2] != b"\xFF\x0A" {
-        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid JXL signature").into());
+        return Err(
+            std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid JXL signature").into(),
+        );
     }
 
     // Parse the header data
@@ -514,7 +533,8 @@ fn jxl_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         (false, _) => (0, 0, 0),
     };
 
-    let height = (read_bits(file_header, height_bits, height_offset, header_size)? + 1) << height_shift;
+    let height =
+        (read_bits(file_header, height_bits, height_offset, header_size)? + 1) << height_shift;
 
     // Extract image width:
     //     If ratio is 0, use the same logic as before
@@ -606,7 +626,9 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         Endian::Big
     } else {
         //  Shouldn't get here by normal means, but handle invalid header anyway
-        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid TIFF header").into())
+        return Err(
+            std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid TIFF header").into(),
+        );
     };
 
     //  Read the IFD offset from the header
@@ -615,7 +637,9 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
     //  IFD offset cannot be 0
     if ifd_offset == 0 {
-        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid IFD offset").into())
+        return Err(
+            std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid IFD offset").into(),
+        );
     }
 
     //  Jump to the IFD offset
@@ -643,7 +667,13 @@ fn tiff_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             // DOUBLE | LONG8 | SLONG8 | IFD8
             12 | 16 | 17 | 18 => 8,
             // Anything else is invalid
-            _ => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid IDF type").into()),
+            _ => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Invalid IDF type",
+                )
+                .into())
+            }
         };
 
         let mut value_buffer = [0; 4];
@@ -747,5 +777,16 @@ fn ico_image_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     Ok(ImageSize {
         width: read_u8(reader)?.wrapping_sub(1) as usize + 1,
         height: read_u8(reader)?.wrapping_sub(1) as usize + 1,
+    })
+}
+
+fn aseprite_size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    // aseprite header: https://github.com/aseprite/aseprite/blob/main/docs/ase-file-specs.md#header
+
+    reader.seek(SeekFrom::Start(0x8))?;
+
+    Ok(ImageSize {
+        width: read_u16(reader, &Endian::Little)? as usize,
+        height: read_u16(reader, &Endian::Little)? as usize,
     })
 }
