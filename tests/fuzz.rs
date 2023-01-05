@@ -8,7 +8,7 @@ use std::{
 
 #[test]
 fn fuzzer_crashes_fixed() {
-    let mut entries = read_dir("test/fuzz_crashes")
+    let mut entries = read_dir("tests/fuzz_crashes")
         .unwrap()
         .map(|res| res.map(|e| e.path()))
         .collect::<Result<Vec<_>, Error>>()
