@@ -13,6 +13,7 @@ imagesize = "0.11"
 ```
 
 ## Supported Image Formats
+* Aseprite
 * BMP
 * GIF
 * HEIC / HEIF
