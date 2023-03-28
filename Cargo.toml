@@ -13,3 +13,11 @@ license = "MIT"
 exclude = ["tests/*"]
 
 [dependencies]
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
+walkdir = "2.3.3"
+
+[[bench]]
+name = "parse_benchmark"
+harness = false
