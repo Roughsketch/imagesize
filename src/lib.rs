@@ -122,10 +122,7 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 /// ```
 ///
 /// [`ImageError`]: enum.ImageError.html
-pub fn size<P>(path: P) -> ImageResult<ImageSize>
-where
-    P: AsRef<Path>,
-{
+pub fn size<P: AsRef<Path>>(path: P) -> ImageResult<ImageSize> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
     reader_size(reader)
