@@ -50,3 +50,12 @@ pub fn read_bits(source: u128, num_bits: usize, offset: usize, size: usize) -> I
         Err(ImageError::CorruptedImage)
     }
 }
+
+/// Assumes tags are in format of 4 char string followed by big endian size for tag
+pub fn read_tag<R: BufRead + Seek>(reader: &mut R) -> ImageResult<(String, usize)> {
+    let mut tag_buf = [0; 4];
+    let size = read_u32(reader, &Endian::Big)? as usize;
+    reader.read_exact(&mut tag_buf)?;
+
+    Ok((String::from_utf8_lossy(&tag_buf).into_owned(), size))
+}
