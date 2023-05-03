@@ -1,5 +1,5 @@
 use crate::{ImageError, ImageResult};
-use std::io::{BufRead, Seek};
+use std::io::{self, BufRead, Read, Seek};
 
 /// Used for TIFF decoding
 pub enum Endian {
@@ -64,4 +64,17 @@ pub fn read_tag<R: BufRead + Seek>(reader: &mut R) -> ImageResult<(String, usize
     reader.read_exact(&mut tag_buf)?;
 
     Ok((String::from_utf8_lossy(&tag_buf).into_owned(), size))
+}
+
+pub fn read_null_terminated_string<R: Read>(reader: &mut R) -> io::Result<String> {
+    let mut bytes = Vec::new();
+    loop {
+        let mut byte = [0; 1];
+        reader.read_exact(&mut byte)?;
+        if byte[0] == 0 {
+            break;
+        }
+        bytes.push(byte[0]);
+    }
+    String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }

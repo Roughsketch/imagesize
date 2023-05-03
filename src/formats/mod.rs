@@ -2,6 +2,7 @@ pub mod aesprite;
 pub mod bmp;
 pub mod exr;
 pub mod gif;
+pub mod hdr;
 pub mod heif;
 pub mod ico;
 pub mod jpeg;
@@ -69,6 +70,10 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 
     if exr::matches(header) {
         return Ok(ImageType::Exr);
+    }
+
+    if hdr::matches(header) {
+        return Ok(ImageType::Hdr);
     }
 
     Err(ImageError::NotSupported)

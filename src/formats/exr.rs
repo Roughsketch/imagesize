@@ -1,19 +1,6 @@
-use std::io::{self, BufRead, Read, Seek, SeekFrom};
+use std::io::{self, BufRead, Seek, SeekFrom};
 
-use crate::{ImageResult, ImageSize};
-
-fn read_null_terminated_string<R: Read>(reader: &mut R) -> io::Result<String> {
-    let mut bytes = Vec::new();
-    loop {
-        let mut byte = [0; 1];
-        reader.read_exact(&mut byte)?;
-        if byte[0] == 0 {
-            break;
-        }
-        bytes.push(byte[0]);
-    }
-    String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
-}
+use crate::{util::read_null_terminated_string, ImageResult, ImageSize};
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     reader.seek(SeekFrom::Start(0))?;

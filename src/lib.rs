@@ -56,6 +56,7 @@ pub enum ImageType {
     Tiff,
     Webp,
     Exr,
+    Hdr,
 }
 
 /// Holds the size information of an image.
@@ -223,5 +224,6 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageRes
         ImageType::Tiff => tiff::size(reader),
         ImageType::Webp => webp::size(reader),
         ImageType::Exr => exr::size(reader),
+        ImageType::Hdr => hdr::size(reader),
     }
 }
