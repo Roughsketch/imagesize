@@ -9,6 +9,7 @@ pub mod jpeg;
 pub mod jxl;
 pub mod png;
 pub mod psd;
+pub mod tga;
 pub mod tiff;
 pub mod webp;
 
@@ -74,6 +75,10 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 
     if hdr::matches(header) {
         return Ok(ImageType::Hdr);
+    }
+
+    if tga::matches(header) {
+        return Ok(ImageType::Tga);
     }
 
     Err(ImageError::NotSupported)
