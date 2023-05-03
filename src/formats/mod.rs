@@ -8,6 +8,7 @@ pub mod heif;
 pub mod ico;
 pub mod jpeg;
 pub mod jxl;
+pub mod ktx2;
 pub mod png;
 pub mod psd;
 pub mod tga;
@@ -84,6 +85,10 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 
     if dds::matches(header) {
         return Ok(ImageType::Dds);
+    }
+
+    if ktx2::matches(header) {
+        return Ok(ImageType::Ktx2);
     }
 
     Err(ImageError::NotSupported)
