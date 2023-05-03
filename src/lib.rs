@@ -60,6 +60,7 @@ pub enum ImageType {
     Tga,
     Dds,
     Ktx2,
+    Qoi,
 }
 
 /// Holds the size information of an image.
@@ -231,5 +232,6 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageRes
         ImageType::Tga => tga::size(reader),
         ImageType::Dds => dds::size(reader),
         ImageType::Ktx2 => ktx2::size(reader),
+        ImageType::Qoi => qoi::size(reader),
     }
 }

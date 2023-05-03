@@ -11,6 +11,7 @@ pub mod jxl;
 pub mod ktx2;
 pub mod png;
 pub mod psd;
+pub mod qoi;
 pub mod tga;
 pub mod tiff;
 pub mod webp;
@@ -89,6 +90,10 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 
     if ktx2::matches(header) {
         return Ok(ImageType::Ktx2);
+    }
+
+    if qoi::matches(header) {
+        return Ok(ImageType::Qoi);
     }
 
     Err(ImageError::NotSupported)
