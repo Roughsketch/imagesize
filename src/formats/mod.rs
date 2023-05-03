@@ -1,5 +1,6 @@
 pub mod aesprite;
 pub mod bmp;
+pub mod exr;
 pub mod gif;
 pub mod heif;
 pub mod ico;
@@ -64,6 +65,10 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 
     if aesprite::matches(header) {
         return Ok(ImageType::Aseprite);
+    }
+
+    if exr::matches(header) {
+        return Ok(ImageType::Exr);
     }
 
     Err(ImageError::NotSupported)

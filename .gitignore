@@ -10,3 +10,4 @@ Cargo.lock
 afl_fuzz_target/
 
 crashpad/
+.DS_Store
