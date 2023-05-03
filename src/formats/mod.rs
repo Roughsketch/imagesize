@@ -1,5 +1,6 @@
 pub mod aesprite;
 pub mod bmp;
+pub mod dds;
 pub mod exr;
 pub mod gif;
 pub mod hdr;
@@ -79,6 +80,10 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 
     if tga::matches(header) {
         return Ok(ImageType::Tga);
+    }
+
+    if dds::matches(header) {
+        return Ok(ImageType::Dds);
     }
 
     Err(ImageError::NotSupported)

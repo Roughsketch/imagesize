@@ -58,6 +58,7 @@ pub enum ImageType {
     Exr,
     Hdr,
     Tga,
+    Dds,
 }
 
 /// Holds the size information of an image.
@@ -227,5 +228,6 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageRes
         ImageType::Exr => exr::size(reader),
         ImageType::Hdr => hdr::size(reader),
         ImageType::Tga => tga::size(reader),
+        ImageType::Dds => dds::size(reader),
     }
 }
