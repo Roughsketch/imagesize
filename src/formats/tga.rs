@@ -17,12 +17,15 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 pub fn matches(header: &[u8]) -> bool {
     // Check the image type (byte 2) to be one of the uncompressed or RLE compressed types
     let image_type = header[2];
-    if image_type != 1
+    if image_type != 0
+        && image_type != 1
         && image_type != 2
         && image_type != 3
         && image_type != 9
         && image_type != 10
         && image_type != 11
+        && image_type != 32
+        && image_type != 33
     {
         return false;
     }
