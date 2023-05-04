@@ -26,6 +26,7 @@ imagesize = "0.12"
 * KTX2
 * PNG
 * PSD / PSB
+* QOI
 * TGA
 * TIFF
 * WEBP
