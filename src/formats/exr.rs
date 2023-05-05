@@ -27,6 +27,10 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             let x_max = read_i32(reader, &Endian::Little)?;
             let y_max = read_i32(reader, &Endian::Little)?;
 
+            if x_min > x_max || y_min > y_max {
+                continue;
+            }
+
             let width = (x_max - x_min + 1) as usize;
             let height = (y_max - y_min + 1) as usize;
 
