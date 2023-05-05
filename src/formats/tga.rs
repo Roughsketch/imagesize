@@ -1,15 +1,15 @@
 use std::io::{BufRead, Seek, SeekFrom};
 
-use crate::{ImageResult, ImageSize};
+use crate::{
+    util::{read_u16, Endian},
+    ImageResult, ImageSize,
+};
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
-    reader.seek(SeekFrom::Start(0))?;
+    reader.seek(SeekFrom::Start(12))?;
 
-    let mut header = [0; 18];
-    reader.read_exact(&mut header)?;
-
-    let width = u16::from_le_bytes([header[12], header[13]]) as usize;
-    let height = u16::from_le_bytes([header[14], header[15]]) as usize;
+    let width = read_u16(reader, &Endian::Little)? as usize;
+    let height = read_u16(reader, &Endian::Little)? as usize;
 
     Ok(ImageSize { width, height })
 }
