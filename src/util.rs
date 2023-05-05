@@ -75,11 +75,21 @@ pub fn read_tag<R: BufRead + Seek>(reader: &mut R) -> ImageResult<(String, usize
     Ok((String::from_utf8_lossy(&tag_buf).into_owned(), size))
 }
 
-pub fn read_null_terminated_string<R: BufRead>(reader: &mut R) -> io::Result<String> {
+pub fn read_null_terminated_string<R: Read>(reader: &mut R, max_size: usize) -> io::Result<String> {
     let mut bytes = Vec::new();
+    let mut amount_read = 0;
 
-    reader.read_until(0, &mut bytes)?;
-    bytes.pop();
+    loop {
+        let mut byte = [0; 1];
+        reader.read_exact(&mut byte)?;
+
+        if byte[0] == 0 || amount_read >= max_size {
+            break;
+        }
+
+        bytes.push(byte[0]);
+        amount_read += 1;
+    }
 
     String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }

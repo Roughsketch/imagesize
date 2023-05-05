@@ -10,12 +10,12 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
     // Read header attributes until we find the dataWindow attribute
     loop {
-        let attr_name = read_null_terminated_string(reader)?;
+        let attr_name = read_null_terminated_string(reader, 255)?;
         if attr_name.is_empty() {
             break; // End of the header
         }
 
-        let attr_type = read_null_terminated_string(reader)?;
+        let attr_type = read_null_terminated_string(reader, 255)?;
 
         // Skip attr_size
         let attr_size = read_u32(reader, &Endian::Little)?;
