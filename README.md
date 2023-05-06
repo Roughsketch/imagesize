@@ -17,6 +17,7 @@ imagesize = "0.12"
 * BMP
 * DDS
 * EXR
+* Farbfeld
 * GIF
 * HDR
 * HEIC / HEIF

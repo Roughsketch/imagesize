@@ -61,6 +61,7 @@ pub enum ImageType {
     Dds,
     Ktx2,
     Qoi,
+    Farbfeld,
 }
 
 /// Holds the size information of an image.
@@ -233,5 +234,6 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageRes
         ImageType::Dds => dds::size(reader),
         ImageType::Ktx2 => ktx2::size(reader),
         ImageType::Qoi => qoi::size(reader),
+        ImageType::Farbfeld => farbfeld::size(reader),
     }
 }

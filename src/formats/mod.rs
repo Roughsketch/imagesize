@@ -2,6 +2,7 @@ pub mod aesprite;
 pub mod bmp;
 pub mod dds;
 pub mod exr;
+pub mod farbfeld;
 pub mod gif;
 pub mod hdr;
 pub mod heif;
@@ -96,5 +97,9 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
         return Ok(ImageType::Qoi);
     }
 
+    if farbfeld::matches(header) {
+        return Ok(ImageType::Farbfeld);
+    }
+    
     Err(ImageError::NotSupported)
 }
