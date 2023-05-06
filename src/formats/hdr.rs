@@ -7,10 +7,9 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
     // Read the first line and check if it's a valid HDR format identifier
     let mut format_identifier = String::new();
-    // If read_line returns 0, then EOF was reached
-    let amount_read = reader.read_line(&mut format_identifier)?;
+    reader.read_line(&mut format_identifier)?;
 
-    if amount_read == 0 || !format_identifier.starts_with("#?RADIANCE") && !format_identifier.starts_with("#?RGBE") {
+    if !format_identifier.starts_with("#?RADIANCE") && !format_identifier.starts_with("#?RGBE") {
         return Err(
             io::Error::new(io::ErrorKind::InvalidData, "Invalid HDR format identifier").into(),
         );
@@ -18,6 +17,8 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
     loop {
         let mut line = String::new();
+
+        // If read_line returns 0, then EOF was reached
         if reader.read_line(&mut line)? == 0 {
             break;
         }
