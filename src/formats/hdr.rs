@@ -23,6 +23,19 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             break;
         }
 
+        // HDR image dimensions can be stored in 8 different ways based on orientation
+        // Using EXIF orientation as a reference: 
+        // https://web.archive.org/web/20220924095433/https://sirv.sirv.com/website/exif-orientation-values.jpg
+        //
+        // -Y N +X M => Standard orientation (EXIF 1)
+        // -Y N -X M => Flipped horizontally (EXIF 2)
+        // +Y N -X M => Flipped vertically and horizontally (EXIF 3)
+        // +Y N +X M => Flipped vertically (EXIF 4)
+        // +X M -Y N => Rotate 90 CCW and flip vertically (EXIF 5)
+        // -X M -Y N => Rotate 90 CCW (EXIF 6)
+        // -X M +Y N => Rotate 90 CW and flip vertically (EXIF 7)
+        // +X M +Y N => Rotate 90 CW (EXIF 8)
+
         // Extract width and height information
         if line.trim().is_empty() || !line.starts_with("-Y") {
             continue;
