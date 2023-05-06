@@ -22,10 +22,10 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
         if attr_name == "dataWindow" && attr_type == "box2i" {
             // Read the data window values
-            let x_min = read_i32(reader, &Endian::Little)? as isize;
-            let y_min = read_i32(reader, &Endian::Little)? as isize;
-            let x_max = read_i32(reader, &Endian::Little)? as isize;
-            let y_max = read_i32(reader, &Endian::Little)? as isize;
+            let x_min = read_i32(reader, &Endian::Little)? as i64;
+            let y_min = read_i32(reader, &Endian::Little)? as i64;
+            let x_max = read_i32(reader, &Endian::Little)? as i64;
+            let y_max = read_i32(reader, &Endian::Little)? as i64;
 
             if x_min > x_max || y_min > y_max {
                 continue;
