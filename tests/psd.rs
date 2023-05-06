@@ -1,9 +1,8 @@
 #[cfg(test)]
-use imagesize::size;
+use imagesize::{size, ImageSize};
 
 #[test]
 fn psd_test() {
     let dim = size("tests/images/psd/test.psd").unwrap();
-    assert_eq!(dim.width, 500);
-    assert_eq!(dim.height, 500);
+    assert_eq!(dim, ImageSize { width: 500, height: 500 });
 }

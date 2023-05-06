@@ -1,9 +1,8 @@
 #[cfg(test)]
-use imagesize::size;
+use imagesize::{size, ImageSize};
 
 #[test]
 fn dds_test() {
     let dim = size("tests/images/dds/test.dds").unwrap();
-    assert_eq!(dim.width, 100);
-    assert_eq!(dim.height, 67);
+    assert_eq!(dim, ImageSize { width: 100, height: 67 });
 }

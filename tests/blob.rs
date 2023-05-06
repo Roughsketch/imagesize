@@ -1,5 +1,5 @@
 #[cfg(test)]
-use imagesize::blob_size;
+use imagesize::{blob_size, ImageSize};
 
 #[test]
 fn blob_test() {
@@ -10,8 +10,7 @@ fn blob_test() {
                     0x08, 0x06, 0x00, 0x00, 0x00, 0x9A, 0x38, 0xC4];
 
     let dim = blob_size(&data).unwrap();
-    assert_eq!(dim.width, 123);
-    assert_eq!(dim.height, 321);
+    assert_eq!(dim, ImageSize { width: 123, height: 321 });
 }
 
 #[test]
@@ -52,6 +51,5 @@ fn blob_test_partial_ico() {
         0xFF
     ];
     let dim = blob_size(&data).unwrap();
-    assert_eq!(dim.width, 10);
-    assert_eq!(dim.height, 100);
+    assert_eq!(dim, ImageSize { width: 10, height: 100 });
 }
