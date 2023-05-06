@@ -54,8 +54,8 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 }
 
 pub fn matches(header: &[u8]) -> bool {
-    let radiance_header = b"#?RADIANCE";
-    let rgbe_header = b"#?RGBE";
+    let radiance_header = b"#?RADIANCE\n";
+    let rgbe_header = b"#?RGBE\n";
 
     header.starts_with(radiance_header) || header.starts_with(rgbe_header)
 }
