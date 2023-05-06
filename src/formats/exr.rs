@@ -10,22 +10,26 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
     // Read header attributes until we find the dataWindow attribute
     loop {
-        let attr_name = read_null_terminated_string(reader)?;
+        let attr_name = read_null_terminated_string(reader, 255)?;
         if attr_name.is_empty() {
             break; // End of the header
         }
 
-        let attr_type = read_null_terminated_string(reader)?;
+        let attr_type = read_null_terminated_string(reader, 255)?;
 
         // Skip attr_size
         let attr_size = read_u32(reader, &Endian::Little)?;
 
         if attr_name == "dataWindow" && attr_type == "box2i" {
             // Read the data window values
-            let x_min = read_i32(reader, &Endian::Little)?;
-            let y_min = read_i32(reader, &Endian::Little)?;
-            let x_max = read_i32(reader, &Endian::Little)?;
-            let y_max = read_i32(reader, &Endian::Little)?;
+            let x_min = read_i32(reader, &Endian::Little)? as i64;
+            let y_min = read_i32(reader, &Endian::Little)? as i64;
+            let x_max = read_i32(reader, &Endian::Little)? as i64;
+            let y_max = read_i32(reader, &Endian::Little)? as i64;
+
+            if x_min > x_max || y_min > y_max {
+                continue;
+            }
 
             let width = (x_max - x_min + 1) as usize;
             let height = (y_max - y_min + 1) as usize;
