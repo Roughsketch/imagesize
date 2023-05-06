@@ -1,10 +1,19 @@
 use crate::{ImageError, ImageResult};
-use std::io::{BufRead, Seek};
+use std::io::{self, BufRead, Seek};
 
 /// Used for TIFF decoding
 pub enum Endian {
     Little,
     Big,
+}
+
+pub fn read_i32<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> ImageResult<i32> {
+    let mut attr_size_buf = [0; 4];
+    reader.read_exact(&mut attr_size_buf)?;
+    match endianness {
+        Endian::Little => Ok(i32::from_le_bytes(attr_size_buf)),
+        Endian::Big => Ok(i32::from_be_bytes(attr_size_buf)),
+    }
 }
 
 pub fn read_u32<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> ImageResult<u32> {
@@ -64,4 +73,23 @@ pub fn read_tag<R: BufRead + Seek>(reader: &mut R) -> ImageResult<(String, usize
     reader.read_exact(&mut tag_buf)?;
 
     Ok((String::from_utf8_lossy(&tag_buf).into_owned(), size))
+}
+
+pub fn read_null_terminated_string<R: BufRead>(reader: &mut R, max_size: usize) -> io::Result<String> {
+    let mut bytes = Vec::new();
+    let mut amount_read = 0;
+
+    loop {
+        let mut byte = [0; 1];
+        reader.read_exact(&mut byte)?;
+
+        if byte[0] == 0 || amount_read >= max_size {
+            break;
+        }
+
+        bytes.push(byte[0]);
+        amount_read += 1;
+    }
+
+    String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }

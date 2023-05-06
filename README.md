@@ -15,13 +15,19 @@ imagesize = "0.12"
 ## Supported Image Formats
 * Aseprite
 * BMP
+* DDS
+* EXR
 * GIF
+* HDR
 * HEIC / HEIF
 * ICO*
 * JPEG
 * JPEG XL
+* KTX2
 * PNG
 * PSD / PSB
+* QOI
+* TGA
 * TIFF
 * WEBP
 
