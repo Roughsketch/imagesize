@@ -100,6 +100,6 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
     if farbfeld::matches(header) {
         return Ok(ImageType::Farbfeld);
     }
-    
+
     Err(ImageError::NotSupported)
 }

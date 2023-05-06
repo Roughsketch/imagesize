@@ -1,9 +1,6 @@
 use std::io::{self, BufRead, Seek, SeekFrom};
 
-use crate::{
-    util::read_line_capped,
-    ImageResult, ImageSize
-};
+use crate::{util::read_line_capped, ImageResult, ImageSize};
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     reader.seek(SeekFrom::Start(0))?;
@@ -29,7 +26,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         }
 
         // HDR image dimensions can be stored in 8 different ways based on orientation
-        // Using EXIF orientation as a reference: 
+        // Using EXIF orientation as a reference:
         // https://web.archive.org/web/20220924095433/https://sirv.sirv.com/website/exif-orientation-values.jpg
         //
         // -Y N +X M => Standard orientation (EXIF 1)
@@ -63,7 +60,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             let height_parsed = dimensions[1].parse::<usize>().ok();
             let width_parsed = dimensions[3].parse::<usize>().ok();
 
-            if let(Some(width), Some(height)) = (width_parsed, height_parsed) {
+            if let (Some(width), Some(height)) = (width_parsed, height_parsed) {
                 return Ok(ImageSize { width, height });
             }
 
