@@ -1,13 +1,16 @@
 use std::io::{self, BufRead, Seek, SeekFrom};
 
-use crate::{ImageResult, ImageSize};
+use crate::{
+    util::read_line_capped,
+    ImageResult, ImageSize
+};
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     reader.seek(SeekFrom::Start(0))?;
 
     // Read the first line and check if it's a valid HDR format identifier
-    let mut format_identifier = String::new();
-    reader.read_line(&mut format_identifier)?;
+    // Only read max of 11 characters which is max for longest valid header
+    let format_identifier = read_line_capped(reader, 11)?;
 
     if !format_identifier.starts_with("#?RADIANCE") && !format_identifier.starts_with("#?RGBE") {
         return Err(
@@ -16,11 +19,13 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     }
 
     loop {
-        let mut line = String::new();
+        // Assuming no line will ever go above 256. Just a random guess at the moment.
+        // If a line goes over the capped length we will return InvalidData which I think
+        // is better than potentially reading a malicious file and exploding memory usage.
+        let line = read_line_capped(reader, 256)?;
 
-        // If read_line returns 0, then EOF was reached
-        if reader.read_line(&mut line)? == 0 {
-            break;
+        if line.trim().is_empty() {
+            continue;
         }
 
         // HDR image dimensions can be stored in 8 different ways based on orientation

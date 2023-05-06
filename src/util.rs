@@ -75,15 +75,15 @@ pub fn read_tag<R: BufRead + Seek>(reader: &mut R) -> ImageResult<(String, usize
     Ok((String::from_utf8_lossy(&tag_buf).into_owned(), size))
 }
 
-pub fn read_null_terminated_string<R: BufRead>(reader: &mut R, max_size: usize) -> io::Result<String> {
+pub fn read_until_capped<R: BufRead>(reader: &mut R, delimiter: u8, max_size: usize) -> io::Result<Vec<u8>> {
     let mut bytes = Vec::new();
     let mut amount_read = 0;
 
-    loop {
+    while amount_read < max_size {
         let mut byte = [0; 1];
         reader.read_exact(&mut byte)?;
 
-        if byte[0] == 0 || amount_read >= max_size {
+        if byte[0] == delimiter {
             break;
         }
 
@@ -91,5 +91,19 @@ pub fn read_null_terminated_string<R: BufRead>(reader: &mut R, max_size: usize) 
         amount_read += 1;
     }
 
+    if amount_read >= max_size {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Delimiter not found within {} bytes", max_size)));
+    }
+
+    Ok(bytes)
+}
+
+pub fn read_line_capped<R: BufRead>(reader: &mut R, max_size: usize) -> io::Result<String> {
+    let bytes = read_until_capped(reader, b'\n', max_size)?;
+    String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
+}
+
+pub fn read_null_terminated_string<R: BufRead>(reader: &mut R, max_size: usize) -> io::Result<String> {
+    let bytes = read_until_capped(reader, 0, max_size)?;
     String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }
