@@ -115,6 +115,8 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 /// * The header isn't recognized as a supported image format
 /// * The data isn't long enough to find the size for the given format
 ///
+/// The minimum data required is 12 bytes. Anything shorter will return [`ImageError::IoError`].
+///
 /// # Examples
 ///
 /// ```
@@ -148,6 +150,8 @@ pub fn size<P: AsRef<Path>>(path: P) -> ImageResult<ImageSize> {
 /// * The header isn't recognized as a supported image format
 /// * The data isn't long enough to find the size for the given format
 ///
+/// The minimum data required is 12 bytes. Anything shorter will return [`ImageError::IoError`].
+///
 /// # Examples
 ///
 /// ```
@@ -179,6 +183,8 @@ pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
 ///
 /// * The header isn't recognized as a supported image format
 /// * The data isn't long enough to find the size for the given format
+///
+/// The minimum data required is 12 bytes. Anything shorter will return [`ImageError::IoError`].
 ///
 /// # Examples
 ///
