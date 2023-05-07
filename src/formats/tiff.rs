@@ -78,10 +78,8 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
         //  Tag 0x100 is the image width, 0x101 is image height
         if tag == 0x100 {
-            debug_assert_eq!(count, 1);
             width = value;
         } else if tag == 0x101 {
-            debug_assert_eq!(count, 1);
             height = value;
         }
 
