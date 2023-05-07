@@ -95,7 +95,7 @@ impl PartialOrd for ImageSize {
 ///
 /// This will check the header to determine what image type the data is.
 pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
-    formats::image_type(header)
+    formats::image_type(&mut Cursor::new(header))
 }
 
 /// Get the image size from a local file
@@ -211,10 +211,7 @@ pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
 ///
 /// [`ImageError`]: enum.ImageError.html
 pub fn reader_size<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageSize> {
-    let mut header = [0; 12];
-    reader.read_exact(&mut header)?;
-
-    dispatch_header(&mut reader, &header)
+    dispatch_header(&mut reader)
 }
 
 /// Calls the correct image size method based on the image type
@@ -222,15 +219,15 @@ pub fn reader_size<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageSize> {
 /// # Arguments
 /// * `reader` - A reader for the data
 /// * `header` - The header of the file
-fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
-    match image_type(header)? {
+fn dispatch_header<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    match formats::image_type(reader)? {
         ImageType::Aseprite => aesprite::size(reader),
         ImageType::Avif => heif::size(reader), // AVIF uses HEIF size on purpose
         ImageType::Bmp => bmp::size(reader),
         ImageType::Dds => dds::size(reader),
         ImageType::Exr => exr::size(reader),
         ImageType::Farbfeld => farbfeld::size(reader),
-        ImageType::Gif => gif::size(header),
+        ImageType::Gif => gif::size(reader),
         ImageType::Hdr => hdr::size(reader),
         ImageType::Heif => heif::size(reader),
         ImageType::Ico => ico::size(reader),
