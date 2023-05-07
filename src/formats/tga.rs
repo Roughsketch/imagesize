@@ -34,10 +34,7 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> bool {
         return false;
     }
 
-    match is_tga(reader, image_type, colormap_type) {
-        Ok(value) => value,
-        Err(_) => false,
-    }
+    is_tga(reader, image_type, colormap_type).unwrap_or(false)
 }
 
 fn is_tga<R: BufRead + Seek>(reader: &mut R, image_type: u8, colormap_type: u8) -> ImageResult<bool> {
