@@ -45,6 +45,7 @@ pub type ImageResult<T> = Result<T, ImageError>;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageType {
     Aseprite,
+    Avif,
     Bmp,
     Gif,
     Heif,
@@ -218,6 +219,7 @@ pub fn reader_size<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageSize> {
 fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
     match image_type(header)? {
         ImageType::Aseprite => aesprite::size(reader),
+        ImageType::Avif => heif::size(reader), // AVIF uses HEIF size on purpose
         ImageType::Bmp => bmp::size(reader),
         ImageType::Gif => gif::size(header),
         ImageType::Heif => heif::size(reader),
