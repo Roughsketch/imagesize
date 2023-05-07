@@ -90,14 +90,14 @@ fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32
             return Ok(size);
         }
 
-        if size <= 8 {
+        if size >= 8 {
+            reader.seek(SeekFrom::Current(size as i64 - 8))?;
+        } else {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 format!("Invalid heif box size: {}", size),
             )
             .into());
         }
-
-        reader.seek(SeekFrom::Current(size as i64 - 8))?;
     }
 }
