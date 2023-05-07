@@ -8,7 +8,7 @@ use crate::{
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     reader.seek(SeekFrom::Start(8))?;
 
-    Ok(ImageSize { 
+    Ok(ImageSize {
         width: read_u32(reader, &Endian::Big)? as usize,
         height: read_u32(reader, &Endian::Big)? as usize,
     })
