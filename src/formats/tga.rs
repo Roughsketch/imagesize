@@ -36,9 +36,7 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> bool {
 
     match is_tga(reader, image_type, colormap_type) {
         Ok(value) => value,
-        Err(why) => {
-            false
-        }
+        Err(_) => false,
     }
 }
 

@@ -23,7 +23,7 @@ use std::io::{BufRead, Seek};
 
 pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
     let mut header = [0; 12];
-    reader.read_exact(&mut header);
+    reader.read_exact(&mut header)?;
 
     // Currently there are no formats where 1 byte is enough to determine format
     if header.len() < 2 {
