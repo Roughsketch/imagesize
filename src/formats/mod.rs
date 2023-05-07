@@ -1,4 +1,5 @@
 pub mod aesprite;
+pub mod avif;
 pub mod bmp;
 pub mod dds;
 pub mod exr;
@@ -51,6 +52,10 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 
     if heif::matches(header) {
         return Ok(ImageType::Heif);
+    }
+
+    if avif::matches(header) {
+        return Ok(ImageType::Avif);
     }
 
     if jxl::matches(header) {
