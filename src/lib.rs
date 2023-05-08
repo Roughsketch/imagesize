@@ -45,22 +45,24 @@ pub type ImageResult<T> = Result<T, ImageError>;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageType {
     Aseprite,
+    Avif,
     Bmp,
+    Dds,
+    Exr,
+    Farbfeld,
     Gif,
+    Hdr,
     Heif,
     Ico,
     Jpeg,
     Jxl,
+    Ktx2,
     Png,
     Psd,
+    Qoi,
+    Tga,
     Tiff,
     Webp,
-    Exr,
-    Hdr,
-    Tga,
-    Dds,
-    Ktx2,
-    Qoi,
 }
 
 /// Holds the size information of an image.
@@ -93,7 +95,7 @@ impl PartialOrd for ImageSize {
 ///
 /// This will check the header to determine what image type the data is.
 pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
-    formats::image_type(header)
+    formats::image_type(&mut Cursor::new(header))
 }
 
 /// Get the image size from a local file
@@ -112,6 +114,8 @@ pub fn image_type(header: &[u8]) -> ImageResult<ImageType> {
 ///
 /// * The header isn't recognized as a supported image format
 /// * The data isn't long enough to find the size for the given format
+///
+/// The minimum data required is 12 bytes. Anything shorter will return [`ImageError::IoError`].
 ///
 /// # Examples
 ///
@@ -146,6 +150,8 @@ pub fn size<P: AsRef<Path>>(path: P) -> ImageResult<ImageSize> {
 /// * The header isn't recognized as a supported image format
 /// * The data isn't long enough to find the size for the given format
 ///
+/// The minimum data required is 12 bytes. Anything shorter will return [`ImageError::IoError`].
+///
 /// # Examples
 ///
 /// ```
@@ -178,6 +184,8 @@ pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
 /// * The header isn't recognized as a supported image format
 /// * The data isn't long enough to find the size for the given format
 ///
+/// The minimum data required is 12 bytes. Anything shorter will return [`ImageError::IoError`].
+///
 /// # Examples
 ///
 /// ```
@@ -203,10 +211,7 @@ pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
 ///
 /// [`ImageError`]: enum.ImageError.html
 pub fn reader_size<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageSize> {
-    let mut header = [0; 12];
-    reader.read_exact(&mut header)?;
-
-    dispatch_header(&mut reader, &header)
+    dispatch_header(&mut reader)
 }
 
 /// Calls the correct image size method based on the image type
@@ -214,24 +219,26 @@ pub fn reader_size<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageSize> {
 /// # Arguments
 /// * `reader` - A reader for the data
 /// * `header` - The header of the file
-fn dispatch_header<R: BufRead + Seek>(reader: &mut R, header: &[u8]) -> ImageResult<ImageSize> {
-    match image_type(header)? {
+fn dispatch_header<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
+    match formats::image_type(reader)? {
         ImageType::Aseprite => aesprite::size(reader),
+        ImageType::Avif => heif::size(reader), // AVIF uses HEIF size on purpose
         ImageType::Bmp => bmp::size(reader),
-        ImageType::Gif => gif::size(header),
+        ImageType::Dds => dds::size(reader),
+        ImageType::Exr => exr::size(reader),
+        ImageType::Farbfeld => farbfeld::size(reader),
+        ImageType::Gif => gif::size(reader),
+        ImageType::Hdr => hdr::size(reader),
         ImageType::Heif => heif::size(reader),
         ImageType::Ico => ico::size(reader),
         ImageType::Jpeg => jpeg::size(reader),
         ImageType::Jxl => jxl::size(reader),
+        ImageType::Ktx2 => ktx2::size(reader),
         ImageType::Png => png::size(reader),
         ImageType::Psd => psd::size(reader),
+        ImageType::Qoi => qoi::size(reader),
+        ImageType::Tga => tga::size(reader),
         ImageType::Tiff => tiff::size(reader),
         ImageType::Webp => webp::size(reader),
-        ImageType::Exr => exr::size(reader),
-        ImageType::Hdr => hdr::size(reader),
-        ImageType::Tga => tga::size(reader),
-        ImageType::Dds => dds::size(reader),
-        ImageType::Ktx2 => ktx2::size(reader),
-        ImageType::Qoi => qoi::size(reader),
     }
 }

@@ -1,5 +1,5 @@
 #[cfg(test)]
-use imagesize::reader_size;
+use imagesize::{reader_size, ImageSize};
 use std::io::Cursor;
 
 #[test]
@@ -12,8 +12,7 @@ fn reader_test() {
         0x08, 0x06, 0x00, 0x00, 0x00, 0x9A, 0x38, 0xC4
     ]);
     let dim = reader_size(reader).unwrap();
-    assert_eq!(dim.width, 123);
-    assert_eq!(dim.height, 321);
+    assert_eq!(dim, ImageSize { width: 123, height: 321 });
 }
 
 #[test]

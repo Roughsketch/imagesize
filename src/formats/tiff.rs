@@ -43,7 +43,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     for _ifd in 0..ifd_count {
         let tag = read_u16(reader, &endianness)?;
         let kind = read_u16(reader, &endianness)?;
-        let count = read_u32(reader, &endianness)?;
+        let _count = read_u32(reader, &endianness)?;
 
         let value_bytes = match kind {
             // BYTE | ASCII | SBYTE | UNDEFINED
@@ -78,10 +78,8 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
         //  Tag 0x100 is the image width, 0x101 is image height
         if tag == 0x100 {
-            debug_assert_eq!(count, 1);
             width = value;
         } else if tag == 0x101 {
-            debug_assert_eq!(count, 1);
             height = value;
         }
 

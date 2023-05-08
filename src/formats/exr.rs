@@ -6,16 +6,21 @@ use crate::{
 };
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
-    reader.seek(SeekFrom::Start(8))?;
+    reader.seek(SeekFrom::Start(4))?;
+
+    // If long names flag is set then max attribute name and type name is 255, otherwise it's only 31
+    let flags = read_u32(reader, &Endian::Little)?;
+    let long_names = flags & 0x400 != 0;
+    let max_name_size = if long_names { 255 } else { 31 };
 
     // Read header attributes until we find the dataWindow attribute
     loop {
-        let attr_name = read_null_terminated_string(reader, 255)?;
+        let attr_name = read_null_terminated_string(reader, max_name_size)?;
         if attr_name.is_empty() {
             break; // End of the header
         }
 
-        let attr_type = read_null_terminated_string(reader, 255)?;
+        let attr_type = read_null_terminated_string(reader, max_name_size)?;
 
         // Skip attr_size
         let attr_size = read_u32(reader, &Endian::Little)?;

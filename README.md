@@ -1,4 +1,4 @@
-[![ci-badge][]][ci] [![docs-badge][]][docs] [![crates.io version]][crates.io link]
+[![crates.io version]][crates.io link] [![docs-badge][]][docs]
 
 # imagesize
 Quickly probe the size of various image formats without reading the entire file.
@@ -17,6 +17,7 @@ imagesize = "0.12"
 * BMP
 * DDS
 * EXR
+* Farbfeld
 * GIF
 * HDR
 * HEIC / HEIF
@@ -39,24 +40,21 @@ If you have a format you think should be added, feel free to create an issue.
 
 ### From a file
 ```rust
-let (width, height) = match size("example.webp") {
-    Ok(dim) => (dim.width, dim.height),
+match imagesize::size("example.webp") {
+    Ok(size) => println!("Image dimensions: {}x{}", size.width, size.height),
     Err(why) => println!("Error getting dimensions: {:?}", why)
 }
 ```
 
 ### From a vector
-Where `magic_partial_download` is a function that downloads a specified amount of bytes from a given url.
 ```rust
-let data: Vec<u8> = magic_partial_download("http://example.com/example.jpg", 0x200);
-let (width, height) = match blob_size(&data) {
-    Ok(dim) => (dim.width, dim.height),
-    Err(why) => println!("Error getting dimensions: {:?}", why)
+let data = vec![0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x64, 0x00, 0x64, 0x00];
+match imagesize::blob_size(&data) {
+    Ok(size) => println!("Image dimensions: {}x{}", size.width, size.height),
+    Err(why) => println!("Error getting dimensions: {:?}", why),
 }
 ```
 
-[ci]: https://travis-ci.org/Roughsketch/imagesize
-[ci-badge]: https://img.shields.io/travis/Roughsketch/imagesize.svg?style=flat-square
 [crates.io link]: https://crates.io/crates/imagesize
 [crates.io version]: https://img.shields.io/crates/v/imagesize.svg?style=flat-square
 [docs]: https://docs.rs/imagesize

@@ -76,7 +76,33 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 }
 
 pub fn matches(header: &[u8]) -> bool {
-    header.len() >= 8 && &header[4..8] == b"ftyp"
+    if header.len() < 12 || &header[4..8] != b"ftyp" {
+        return false;
+    }
+
+    let header_brand = &header[8..12];
+
+    // Since other non-heif files may contain ftype in the header
+    // we try to use brands to distinguish image files specifically.
+    // List of brands from here: https://mp4ra.org/#/brands
+    let valid_brands = [
+        // HEIF specific
+        b"avci", b"avcs", b"heic", b"heim",
+        b"heis", b"heix", b"hevc", b"hevm",
+        b"hevs", b"hevx", b"jpeg", b"jpgs",
+        b"mif1", b"msf1", b"mif2", b"pred",
+        // AVIF specific
+        b"avif", b"avio", b"avis", b"MA1A",
+        b"MA1B",
+    ];
+
+    for brand in valid_brands {
+        if brand == header_brand {
+            return true;
+        }
+    }
+    
+    false
 }
 
 fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32> {
@@ -90,14 +116,14 @@ fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32
             return Ok(size);
         }
 
-        if size <= 8 {
+        if size >= 8 {
+            reader.seek(SeekFrom::Current(size as i64 - 8))?;
+        } else {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 format!("Invalid heif box size: {}", size),
             )
             .into());
         }
-
-        reader.seek(SeekFrom::Current(size as i64 - 8))?;
     }
 }
