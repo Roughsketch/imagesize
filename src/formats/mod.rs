@@ -106,6 +106,7 @@ pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
         return Ok(ImageType::Farbfeld);
     }
 
+    // Keep TGA last because it has the highest probability of false positives
     if tga::matches(&header, reader) {
         return Ok(ImageType::Tga);
     }
