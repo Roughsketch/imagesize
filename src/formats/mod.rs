@@ -16,6 +16,7 @@ pub mod psd;
 pub mod qoi;
 pub mod tga;
 pub mod tiff;
+pub mod vtf;
 pub mod webp;
 
 use crate::{ImageError, ImageResult, ImageType};
@@ -104,6 +105,10 @@ pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
 
     if farbfeld::matches(&header) {
         return Ok(ImageType::Farbfeld);
+    }
+
+    if vtf::matches(&header) {
+        return Ok(ImageType::Vtf);
     }
 
     // Keep TGA last because it has the highest probability of false positives
