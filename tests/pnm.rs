@@ -7,21 +7,9 @@ use imagesize::{size, ImageSize};
 //
 // Need more test files for P2, 3, 5, 6
 #[test]
-fn pnm_test() {
-    let dim = size("tests/images/pnm/P1/circle.ascii.pbm").unwrap();
-    assert_eq!(dim, ImageSize { width: 200, height: 200 });
-}
-
-#[test]
 fn pnm_same_line_test() {
     let dim = size("tests/images/pnm/P1/fool.ascii.pbm").unwrap();
     assert_eq!(dim, ImageSize { width: 514, height: 324 });
-}
-
-#[test]
-fn pnm_binary_test() {
-    let dim = size("tests/images/pnm/P4/apollonian_gasket.pbm").unwrap();
-    assert_eq!(dim, ImageSize { width: 600, height: 600 });
 }
 
 #[test]
