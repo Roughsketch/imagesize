@@ -74,6 +74,7 @@ pub enum ImageType {
     Ktx2,
     /// Standard PNG
     Png,
+    Pnm,
     /// Photoshop Document
     Psd,
     /// Quite OK Image Format
@@ -259,6 +260,7 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> 
         ImageType::Jxl => jxl::size(reader),
         ImageType::Ktx2 => ktx2::size(reader),
         ImageType::Png => png::size(reader),
+        ImageType::Pnm => pnm::size(reader),
         ImageType::Psd => psd::size(reader),
         ImageType::Qoi => qoi::size(reader),
         ImageType::Tga => tga::size(reader),

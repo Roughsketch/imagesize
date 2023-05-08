@@ -12,6 +12,7 @@ pub mod jpeg;
 pub mod jxl;
 pub mod ktx2;
 pub mod png;
+pub mod pnm;
 pub mod psd;
 pub mod qoi;
 pub mod tga;
@@ -105,6 +106,10 @@ pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
 
     if farbfeld::matches(&header) {
         return Ok(ImageType::Farbfeld);
+    }
+
+    if pnm::matches(&header) {
+        return Ok(ImageType::Pnm);
     }
 
     if vtf::matches(&header) {
