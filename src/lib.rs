@@ -62,6 +62,7 @@ pub enum ImageType {
     Qoi,
     Tga,
     Tiff,
+    Vtf,
     Webp,
 }
 
@@ -239,6 +240,7 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> 
         ImageType::Qoi => qoi::size(reader),
         ImageType::Tga => tga::size(reader),
         ImageType::Tiff => tiff::size(reader),
+        ImageType::Vtf => vtf::size(reader),
         ImageType::Webp => webp::size(reader),
     }
 }

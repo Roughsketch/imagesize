@@ -30,6 +30,7 @@ imagesize = "0.12"
 * QOI
 * TGA
 * TIFF
+* VTF
 * WEBP
 
 If you have a format you think should be added, feel free to create an issue.
