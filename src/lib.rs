@@ -74,6 +74,7 @@ pub enum ImageType {
     Ktx2,
     /// Standard PNG
     Png,
+    /// Portable Any Map
     Pnm,
     /// Photoshop Document
     Psd,
