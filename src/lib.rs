@@ -44,25 +44,48 @@ pub type ImageResult<T> = Result<T, ImageError>;
 /// Types of image formats that this crate can identify.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageType {
+    /// Animated sprite image format
+    /// <https://github.com/aseprite/aseprite>
     Aseprite,
+    /// AV1 Image File Format
     Avif,
+    /// Standard Bitmap
     Bmp,
+    /// DirectDraw Surface
     Dds,
+    /// OpenEXR
     Exr,
+    /// Farbfeld
+    /// <https://tools.suckless.org/farbfeld/>
     Farbfeld,
+    /// Standard GIF
     Gif,
+    /// Radiance HDR
     Hdr,
+    /// High Efficiency Image File Format
     Heif,
+    /// Icon file
     Ico,
+    /// Standard JPEG
     Jpeg,
+    /// JPEG XL
     Jxl,
+    /// Khronos Texture Container
     Ktx2,
+    /// Standard PNG
     Png,
+    /// Photoshop Document
     Psd,
+    /// Quite OK Image Format
+    /// <https://qoiformat.org/>
     Qoi,
+    /// Truevision Graphics Adapter
     Tga,
+    /// Standard TIFF
     Tiff,
+    /// Valve Texture Format
     Vtf,
+    /// Standard Webp
     Webp,
 }
 
