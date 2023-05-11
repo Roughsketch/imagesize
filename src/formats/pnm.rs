@@ -17,7 +17,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
         // If it's a comment, skip until newline
         if trimmed_line.starts_with('#') {
-            read_until_capped(reader, b'\n', 1024);
+            read_until_capped(reader, b'\n', 1024)?;
             continue
         }
 
