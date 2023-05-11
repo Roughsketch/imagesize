@@ -26,6 +26,7 @@ imagesize = "0.12"
 * JPEG XL
 * KTX2
 * PNG
+* PNM (PBM, PGM, PPM)
 * PSD / PSB
 * QOI
 * TGA
