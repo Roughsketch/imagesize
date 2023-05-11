@@ -98,6 +98,41 @@ pub fn read_until_capped<R: BufRead>(reader: &mut R, delimiter: u8, max_size: us
     Ok(bytes)
 }
 
+/// Skips all starting whitespace characters and then reads a string until the next whitespace character
+/// Example:
+///     "    test   string" => "test"
+pub fn read_until_whitespace<R: BufRead>(reader: &mut R, max_size: usize) -> io::Result<String> {
+    let mut bytes = Vec::new();
+    let mut amount_read = 0;
+    let mut seen_non_whitespace = false;
+
+    while amount_read < max_size {
+        amount_read += 1;
+        
+        let mut byte = [0; 1];
+        reader.read_exact(&mut byte)?;
+
+        if byte[0].is_ascii_whitespace() {
+            // If we've seen a non-whitespace character before then exit
+            if seen_non_whitespace {
+                break;
+            }
+
+            // Skip whitespace until we found first non-whitespace character
+            continue;
+        }
+
+        bytes.push(byte[0]);
+        seen_non_whitespace = true;
+    }
+
+    if amount_read >= max_size {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Delimiter not found within {} bytes", max_size)));
+    }
+
+    String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
+}
+
 pub fn read_line_capped<R: BufRead>(reader: &mut R, max_size: usize) -> io::Result<String> {
     let bytes = read_until_capped(reader, b'\n', max_size)?;
     String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))

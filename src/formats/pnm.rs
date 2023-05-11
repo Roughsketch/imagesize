@@ -6,32 +6,44 @@ use std::io::{self, BufRead, Seek, SeekFrom};
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     reader.seek(SeekFrom::Start(2))?;
 
+    // We try to loop until we find a line that does not start with a comment
+    // or is empty. After that, we should expect width and height back to back
+    // separated by an arbitrary amount of whitespace.
     loop {
         // Lines can be arbitrarily long, but 1k is a good enough cap I think.
         // Anything higher and I blame whoever made the file.
-        let line = read_line_capped(reader, 1024)?;
+        let line = read_until_whitespace(reader, 1024)?;
         let trimmed_line = line.trim();
 
-        if trimmed_line.is_empty() || trimmed_line.starts_with('#') {
+        // If it's a comment, skip until newline
+        if trimmed_line.starts_with('#') {
+            read_until_capped(reader, b'\n', 1024);
+            continue
+        }
+
+        // If it's just empty skip
+        if trimmed_line.is_empty() {
             continue;
         }
 
-        let dimensions: Vec<&str> = trimmed_line.split_whitespace().collect();
-        if dimensions.len() != 2 && dimensions.len() != 3 {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Invalid PNM dimensions line",
-            )
-            .into());
-        }
+        // The first thing we read that isn't empty or a comment should be the width
+        let raw_width = line;
 
-        let width_parsed = dimensions[0].parse::<usize>().ok();
-        let height_parsed = dimensions[1].parse::<usize>().ok();
+        // Read in the next non-whitespace section as the height
+        let line = read_until_whitespace(reader, 1024)?;
+        let raw_height = line.trim();
 
+        // Try to parse the width and height
+        let width_parsed = raw_width.parse::<usize>().ok();
+        let height_parsed = raw_height.parse::<usize>().ok();
+
+        // If successful return it
         if let (Some(width), Some(height)) = (width_parsed, height_parsed) {
             return Ok(ImageSize { width, height });
         }
 
+        // If no successful then assume that it cannot be read
+        // If this happens we need to gather test files for those cases
         break;
     }
 
