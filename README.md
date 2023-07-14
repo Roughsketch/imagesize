@@ -14,6 +14,7 @@ imagesize = "0.12"
 
 ## Supported Image Formats
 * Aseprite
+* Avif
 * BMP
 * DDS
 * EXR
