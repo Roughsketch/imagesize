@@ -1,7 +1,14 @@
 use crate::util::*;
 use crate::{ImageError, ImageResult, ImageSize};
 
+use std::convert::TryInto;
 use std::io::{BufRead, Seek, SeekFrom};
+
+pub enum Heif {
+    Avif,
+    Heic,
+    Unknown,
+}
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     reader.seek(SeekFrom::Start(0))?;
@@ -75,34 +82,39 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     })
 }
 
-pub fn matches(header: &[u8]) -> bool {
+pub fn matches(header: &[u8]) -> Option<Heif> {
     if header.len() < 12 || &header[4..8] != b"ftyp" {
-        return false;
+        return None;
     }
 
-    let header_brand = &header[8..12];
+    let header_brand: [u8; 4] = header[8..12].try_into().unwrap();
 
     // Since other non-heif files may contain ftype in the header
     // we try to use brands to distinguish image files specifically.
     // List of brands from here: https://mp4ra.org/#/brands
-    let valid_brands = [
-        // HEIF specific
+    #[rustfmt::skip]
+    // HEIC specific
+    let heic_brands = [
         b"avci", b"avcs", b"heic", b"heim",
         b"heis", b"heix", b"hevc", b"hevm",
         b"hevs", b"hevx", b"jpeg", b"jpgs",
         b"mif1", b"msf1", b"mif2", b"pred",
-        // AVIF specific
+    ];
+
+    #[rustfmt::skip]
+    // AVIF specific
+    let avif_brands = [
         b"avif", b"avio", b"avis", b"MA1A",
         b"MA1B",
     ];
 
-    for brand in valid_brands {
-        if brand == header_brand {
-            return true;
-        }
-    }
-    
-    false
+    Some(if heic_brands.contains(&&header_brand) {
+        Heif::Heic
+    } else if avif_brands.contains(&&header_brand) {
+        Heif::Avif
+    } else {
+        Heif::Unknown
+    })
 }
 
 fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32> {
