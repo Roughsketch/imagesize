@@ -66,6 +66,8 @@ pub enum ImageType {
     Heif,
     /// Icon file
     Ico,
+    /// Interleaved Bitmap
+    Ilbm,
     /// Standard JPEG
     Jpeg,
     /// JPEG XL
@@ -257,6 +259,7 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> 
         ImageType::Hdr => hdr::size(reader),
         ImageType::Heif => heif::size(reader),
         ImageType::Ico => ico::size(reader),
+        ImageType::Ilbm => ilbm::size(reader),
         ImageType::Jpeg => jpeg::size(reader),
         ImageType::Jxl => jxl::size(reader),
         ImageType::Ktx2 => ktx2::size(reader),

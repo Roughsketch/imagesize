@@ -23,6 +23,7 @@ imagesize = "0.12"
 * HDR
 * HEIC / HEIF
 * ICO*
+* ILBM (IFF)
 * JPEG
 * JPEG XL
 * KTX2

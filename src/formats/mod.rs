@@ -8,6 +8,7 @@ pub mod gif;
 pub mod hdr;
 pub mod heif;
 pub mod ico;
+pub mod ilbm;
 pub mod jpeg;
 pub mod jxl;
 pub mod ktx2;
@@ -114,6 +115,10 @@ pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
 
     if vtf::matches(&header) {
         return Ok(ImageType::Vtf);
+    }
+
+    if ilbm::matches(&header) {
+        return Ok(ImageType::Ilbm);
     }
 
     // Keep TGA last because it has the highest probability of false positives
