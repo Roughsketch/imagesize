@@ -47,7 +47,11 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         // means that no matter whether the line starts with X or Y, it will be read as height then width.
 
         // Extract width and height information
-        if line.starts_with("-Y") || line.starts_with("+Y") || line.starts_with("-X") || line.starts_with("+X") {
+        if line.starts_with("-Y")
+            || line.starts_with("+Y")
+            || line.starts_with("-X")
+            || line.starts_with("+X")
+        {
             let dimensions: Vec<&str> = line.split_whitespace().collect();
             if dimensions.len() != 4 {
                 return Err(io::Error::new(

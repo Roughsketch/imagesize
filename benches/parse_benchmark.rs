@@ -16,11 +16,13 @@ fn size_benchmarks(c: &mut Criterion) {
     group.bench_with_input(
         BenchmarkId::from_parameter(paths.len()),
         &paths,
-        |b, paths| b.iter(|| 
-            for path in paths {
-                let _ = imagesize::size(black_box(path));
-            }
-        ),
+        |b, paths| {
+            b.iter(|| {
+                for path in paths {
+                    let _ = imagesize::size(black_box(path));
+                }
+            })
+        },
     );
 
     group.finish();

@@ -10,16 +10,13 @@ pub fn matches(header: &[u8]) -> bool {
     // Since other non-AVIF files may contain ftype in the header
     // we try to use brands to distinguish image files specifically.
     // List of brands from here: https://mp4ra.org/#/brands
-    let valid_brands = [
-        b"avif", b"avio", b"avis", b"MA1A",
-        b"MA1B",
-    ];
+    let valid_brands = [b"avif", b"avio", b"avis", b"MA1A", b"MA1B"];
 
     for brand in valid_brands {
         if brand == header_brand {
             return true;
         }
     }
-    
+
     false
 }

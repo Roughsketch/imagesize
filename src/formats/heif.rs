@@ -87,13 +87,9 @@ pub fn matches(header: &[u8]) -> bool {
     // List of brands from here: https://mp4ra.org/#/brands
     let valid_brands = [
         // HEIF specific
-        b"avci", b"avcs", b"heic", b"heim",
-        b"heis", b"heix", b"hevc", b"hevm",
-        b"hevs", b"hevx", b"jpeg", b"jpgs",
-        b"mif1", b"msf1", b"mif2", b"pred",
-        // AVIF specific
-        b"avif", b"avio", b"avis", b"MA1A",
-        b"MA1B",
+        b"avci", b"avcs", b"heic", b"heim", b"heis", b"heix", b"hevc", b"hevm", b"hevs", b"hevx",
+        b"jpeg", b"jpgs", b"mif1", b"msf1", b"mif2", b"pred", // AVIF specific
+        b"avif", b"avio", b"avis", b"MA1A", b"MA1B",
     ];
 
     for brand in valid_brands {
@@ -101,7 +97,7 @@ pub fn matches(header: &[u8]) -> bool {
             return true;
         }
     }
-    
+
     false
 }
 
