@@ -12,7 +12,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 
     loop {
         reader.read_exact(&mut chunk_id)?;
-        let chunk_length = read_u32(reader, &Endian::Big)?;
+        let chunk_length = read_u32(reader, &Endian::Big)? as i64;
 
         if &chunk_id == b"BMHD" {
             return Ok(ImageSize {
@@ -27,7 +27,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         }
 
         // skip over the chunk; chunks of odd length have a padding byte
-        reader.seek(SeekFrom::Current((chunk_length + chunk_length % 2) as i64))?;
+        reader.seek(SeekFrom::Current(chunk_length + chunk_length % 2))?;
     }
 }
 
