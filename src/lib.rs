@@ -66,9 +66,6 @@ pub enum ImageType {
     /// Radiance HDR
     Hdr,
     /// Image Container Format
-    ///
-    /// This means there is a `Unknown Compression Type` in `HEIF` file. But you don't need to care
-    /// about this in normal.
     Heif(Compression),
     /// Icon file
     Ico,
