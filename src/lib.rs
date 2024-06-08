@@ -8,7 +8,11 @@ mod container;
 mod formats;
 mod util;
 
-use {container::*, formats::*};
+pub use container::heif::Compression;
+use {
+    container::heif::{self},
+    formats::*,
+};
 
 /// An Error type used in failure cases.
 #[derive(Debug)]
@@ -48,8 +52,6 @@ pub enum ImageType {
     /// Animated sprite image format
     /// <https://github.com/aseprite/aseprite>
     Aseprite,
-    /// AV1 Image File Format
-    Avif,
     /// Standard Bitmap
     Bmp,
     /// DirectDraw Surface
@@ -63,13 +65,11 @@ pub enum ImageType {
     Gif,
     /// Radiance HDR
     Hdr,
-    /// High Efficiency Image File Format
-    Heic,
     /// Image Container Format
     ///
     /// This means there is a `Unknown Compression Type` in `HEIF` file. But you don't need to care
     /// about this in normal.
-    Heif,
+    Heif(Compression),
     /// Icon file
     Ico,
     /// Standard JPEG
@@ -273,7 +273,6 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> 
         ImageType::Vtf => vtf::size(reader),
         ImageType::Webp => webp::size(reader),
 
-        // AVIF and HEIC uses HEIF size on purpose
-        ImageType::Heif | ImageType::Heic | ImageType::Avif => heif::size(reader),
+        ImageType::Heif(..) => heif::size(reader),
     }
 }

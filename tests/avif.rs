@@ -1,5 +1,5 @@
 #[cfg(test)]
-use imagesize::{image_type, size, ImageSize, ImageType};
+use imagesize::{image_type, size, Compression, ImageSize, ImageType};
 
 #[test]
 fn avif_test() {
@@ -34,7 +34,7 @@ fn avif_type() {
     f.read_to_end(&mut buf).unwrap();
 
     let ty = image_type(&buf).unwrap();
-    assert_eq!(ty, ImageType::Avif);
+    assert_eq!(ty, ImageType::Heif(Compression::Av1));
 }
 
 #[test]
@@ -46,5 +46,5 @@ fn avif_seq_type() {
     f.read_to_end(&mut buf).unwrap();
 
     let ty = image_type(&buf).unwrap();
-    assert_eq!(ty, ImageType::Avif);
+    assert_eq!(ty, ImageType::Heif(Compression::Av1));
 }

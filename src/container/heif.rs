@@ -5,7 +5,8 @@ use std::convert::TryInto;
 use std::io::{BufRead, Seek, SeekFrom};
 
 // REFS: https://github.com/strukturag/libheif/blob/f0c1a863cabbccb2d280515b7ecc73e6717702dc/libheif/heif.h#L600
-pub enum Heif {
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Compression {
     Av1,
     Hevc,
     Jpeg,
@@ -88,7 +89,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     })
 }
 
-pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Heif> {
+pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Compression> {
     if header.len() < 12 || &header[4..8] != b"ftyp" {
         return None;
     }
@@ -111,7 +112,7 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Heif>
             let mut buf = [0; 12];
 
             if reader.read_exact(&mut buf).is_err() {
-                return Some(Heif::Unknown);
+                return Some(Compression::Unknown);
             }
 
             let brand2: [u8; 4] = buf[4..8].try_into().unwrap();
@@ -129,11 +130,11 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Heif>
             }
         }
 
-        Some(Heif::Unknown)
+        Some(Compression::Unknown)
     }
 }
 
-fn inner_matches(brand: &[u8; 4]) -> Option<Heif> {
+fn inner_matches(brand: &[u8; 4]) -> Option<Compression> {
     // Since other non-heif files may contain ftype in the header
     // we try to use brands to distinguish image files specifically.
     // List of brands from here: https://mp4ra.org/#/brands
@@ -160,11 +161,11 @@ fn inner_matches(brand: &[u8; 4]) -> Option<Heif> {
     // let feature_brands = [b"pred", b"auxl", b"thmb", b"base", b"dimg"];
 
     Some(if hevc_brands.contains(&brand) {
-        Heif::Hevc
+        Compression::Hevc
     } else if av1_brands.contains(&brand) {
-        Heif::Av1
+        Compression::Av1
     } else if jpeg_brands.contains(&brand) {
-        Heif::Jpeg
+        Compression::Jpeg
     } else {
         return None;
     })

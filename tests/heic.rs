@@ -1,5 +1,5 @@
 #[cfg(test)]
-use imagesize::{image_type, size, ImageSize, ImageType};
+use imagesize::{image_type, size, Compression, ImageSize, ImageType};
 
 #[test]
 fn heic_test() {
@@ -34,7 +34,7 @@ fn heic_type() {
     f.read_to_end(&mut buf).unwrap();
 
     let ty = image_type(&buf).unwrap();
-    assert_eq!(ty, ImageType::Heic);
+    assert_eq!(ty, ImageType::Heif(Compression::Hevc));
 }
 
 #[test]
@@ -46,5 +46,5 @@ fn heic_msf1_type() {
     f.read_to_end(&mut buf).unwrap();
 
     let ty = image_type(&buf).unwrap();
-    assert_eq!(ty, ImageType::Heic);
+    assert_eq!(ty, ImageType::Heif(Compression::Hevc));
 }
