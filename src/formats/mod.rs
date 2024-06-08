@@ -54,14 +54,14 @@ pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
         return Ok(ImageType::Webp);
     }
 
-    if let Some(ty) = container::heif::matches(&header) {
+    if let Some(ty) = container::heif::matches(&header, reader) {
         use container::heif::Heif;
 
         return Ok(match ty {
-            Heif::Avif => ImageType::Avif,
-            Heif::Heic => ImageType::Heic,
-            // Unknown format in HEIF.
-            _ => ImageType::Heif,
+            Heif::Hevc => ImageType::Heic,
+            Heif::Av1 => ImageType::Avif,
+            Heif::Jpeg => ImageType::Jpeg,
+            Heif::Unknown => ImageType::Heif,
         });
     }
 

@@ -18,7 +18,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         // If it's a comment, skip until newline
         if trimmed_line.starts_with('#') {
             read_until_capped(reader, b'\n', 1024)?;
-            continue
+            continue;
         }
 
         // If it's just empty skip
@@ -56,7 +56,7 @@ pub fn matches(header: &[u8]) -> bool {
     }
 
     // We only support P1 to P6. Currently ignoring P7, PF, PFM
-    if header[1] < b'1' && header[1] > b'6' {
+    if header[1] < b'1' || header[1] > b'6' {
         return false;
     }
 

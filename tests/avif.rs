@@ -36,3 +36,15 @@ fn avif_type() {
     let ty = image_type(&buf).unwrap();
     assert_eq!(ty, ImageType::Avif);
 }
+
+#[test]
+fn avif_seq_type() {
+    use std::{fs::File, io::Read};
+
+    let mut f = File::open("tests/images/avif/test.avifs").unwrap();
+    let mut buf = vec![];
+    f.read_to_end(&mut buf).unwrap();
+
+    let ty = image_type(&buf).unwrap();
+    assert_eq!(ty, ImageType::Avif);
+}

@@ -4,10 +4,16 @@ use crate::{ImageError, ImageResult, ImageSize};
 use std::convert::TryInto;
 use std::io::{BufRead, Seek, SeekFrom};
 
+// REFS: https://github.com/strukturag/libheif/blob/f0c1a863cabbccb2d280515b7ecc73e6717702dc/libheif/heif.h#L600
 pub enum Heif {
-    Avif,
-    Heic,
+    Av1,
+    Hevc,
+    Jpeg,
     Unknown,
+    // unused(reuse in the future?)
+    // Avc,
+    // Vvc,
+    // Evc,
 }
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
@@ -82,38 +88,85 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     })
 }
 
-pub fn matches(header: &[u8]) -> Option<Heif> {
+pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Heif> {
     if header.len() < 12 || &header[4..8] != b"ftyp" {
         return None;
     }
 
-    let header_brand: [u8; 4] = header[8..12].try_into().unwrap();
+    let brand: [u8; 4] = header[8..12].try_into().unwrap();
 
+    // case 1: { heic, ... }
+    if let Some(v) = inner_matches(&brand) {
+        Some(v)
+
+    // case 2: { msf1, version, heic,  msf1, ... }
+    //           brand          brand2 brand3
+    // case 3: { msf1, version, msf1,  heic, ... }
+    //           brand          brand2 brand3
+    } else {
+        // REFS: https://github.com/nokiatech/heif/blob/be43efdf273ae9cf90e552b99f16ac43983f3d19/srcs/reader/heifreaderimpl.cpp#L738
+        let m_brands = [b"mif1", b"msf1", b"mif2", b"miaf"];
+
+        if m_brands.contains(&&brand) {
+            let mut buf = [0; 12];
+
+            if reader.read_exact(&mut buf).is_err() {
+                return Some(Heif::Unknown);
+            }
+
+            let brand2: [u8; 4] = buf[4..8].try_into().unwrap();
+            let brand3: [u8; 4] = buf[8..12].try_into().unwrap();
+
+            // case 2
+            if let Some(v) = inner_matches(&brand2) {
+                return Some(v);
+
+            // case 3
+            } else if m_brands.contains(&&brand2) {
+                if let Some(v) = inner_matches(&brand3) {
+                    return Some(v);
+                }
+            }
+        }
+
+        Some(Heif::Unknown)
+    }
+}
+
+fn inner_matches(brand: &[u8; 4]) -> Option<Heif> {
     // Since other non-heif files may contain ftype in the header
     // we try to use brands to distinguish image files specifically.
     // List of brands from here: https://mp4ra.org/#/brands
-    #[rustfmt::skip]
-    // HEIC specific
-    let heic_brands = [
-        b"avci", b"avcs", b"heic", b"heim",
-        b"heis", b"heix", b"hevc", b"hevm",
-        b"hevs", b"hevx", b"jpeg", b"jpgs",
-        b"mif1", b"msf1", b"mif2", b"pred",
+    let hevc_brands = [
+        b"heic", b"heix", b"heis", b"hevs", b"heim", b"hevm", b"hevc", b"hevx",
     ];
-
-    #[rustfmt::skip]
-    // AVIF specific
-    let avif_brands = [
-        b"avif", b"avio", b"avis", b"MA1A",
-        b"MA1B",
+    let av1_brands = [
+        b"avif", b"avio", b"avis",
+        // AVIF only
+        // REFS: https://rawcdn.githack.com/AOMediaCodec/av1-avif/67a92add6cd642a8863e386fa4db87954a6735d1/index.html#advanced-profile
+        b"MA1A", b"MA1B",
     ];
+    let jpeg_brands = [b"jpeg", b"jpgs"];
 
-    Some(if heic_brands.contains(&&header_brand) {
-        Heif::Heic
-    } else if avif_brands.contains(&&header_brand) {
-        Heif::Avif
+    // unused
+    // REFS: https://github.com/MPEGGroup/FileFormatConformance/blob/6eef4e4c8bc70e2af9aeb1d62e764a6235f9d6a6/data/standard_features/23008-12/brands.json
+    // let avc_brands = [b"avci", b"avcs"];
+    // let vvc_brands = [b"vvic", b"vvis"];
+    // let evc_brands = [b"evbi", b"evbs", b"evmi", b"evms"];
+
+    // Maybe unnecessary
+    // REFS: https://github.com/nokiatech/heif/blob/be43efdf273ae9cf90e552b99f16ac43983f3d19/srcs/reader/heifreaderimpl.cpp#L1415
+    // REFS: https://github.com/nokiatech/heif/blob/be43efdf273ae9cf90e552b99f16ac43983f3d19/srcs/api-cpp/ImageItem.h#L37
+    // let feature_brands = [b"pred", b"auxl", b"thmb", b"base", b"dimg"];
+
+    Some(if hevc_brands.contains(&brand) {
+        Heif::Hevc
+    } else if av1_brands.contains(&brand) {
+        Heif::Av1
+    } else if jpeg_brands.contains(&brand) {
+        Heif::Jpeg
     } else {
-        Heif::Unknown
+        return None;
     })
 }
 
