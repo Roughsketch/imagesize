@@ -37,7 +37,11 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> bool {
     is_tga(reader, image_type, colormap_type).unwrap_or(false)
 }
 
-fn is_tga<R: BufRead + Seek>(reader: &mut R, image_type: u8, colormap_type: u8) -> ImageResult<bool> {
+fn is_tga<R: BufRead + Seek>(
+    reader: &mut R,
+    image_type: u8,
+    colormap_type: u8,
+) -> ImageResult<bool> {
     // Attempt to go to footer section. This also doubles as a size check since
     // if there aren't 18 bytes available it will return an error.
     reader.seek(SeekFrom::End(-18))?;
@@ -54,8 +58,8 @@ fn is_tga<R: BufRead + Seek>(reader: &mut R, image_type: u8, colormap_type: u8) 
         return Ok(true);
     }
 
-    // Now we're into heuristic territory. 
-    // With no footer I don't believe there is a 100% way to verify whether given bytes 
+    // Now we're into heuristic territory.
+    // With no footer I don't believe there is a 100% way to verify whether given bytes
     // are a TGA or not. To get around this we add a few corroborating byte checks and
     // if they make up a valid TGA configuration we assume that it's a TGA.
 
@@ -82,12 +86,12 @@ fn is_tga<R: BufRead + Seek>(reader: &mut R, image_type: u8, colormap_type: u8) 
     }
 
     // Assume color map sizes must be a multiple of 8
-    if colormap_type == 1 && 
-       (colormap_size != 0 && 
-        colormap_size != 8 && 
-        colormap_size != 16 && 
-        colormap_size != 24 && 
-        colormap_size != 32)
+    if colormap_type == 1
+        && (colormap_size != 0
+            && colormap_size != 8
+            && colormap_size != 16
+            && colormap_size != 24
+            && colormap_size != 32)
     {
         return Ok(false);
     }

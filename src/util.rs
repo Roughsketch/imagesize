@@ -75,7 +75,11 @@ pub fn read_tag<R: BufRead + Seek>(reader: &mut R) -> ImageResult<(String, usize
     Ok((String::from_utf8_lossy(&tag_buf).into_owned(), size))
 }
 
-pub fn read_until_capped<R: BufRead>(reader: &mut R, delimiter: u8, max_size: usize) -> io::Result<Vec<u8>> {
+pub fn read_until_capped<R: BufRead>(
+    reader: &mut R,
+    delimiter: u8,
+    max_size: usize,
+) -> io::Result<Vec<u8>> {
     let mut bytes = Vec::new();
     let mut amount_read = 0;
 
@@ -92,7 +96,10 @@ pub fn read_until_capped<R: BufRead>(reader: &mut R, delimiter: u8, max_size: us
     }
 
     if amount_read >= max_size {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Delimiter not found within {} bytes", max_size)));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("Delimiter not found within {} bytes", max_size),
+        ));
     }
 
     Ok(bytes)
@@ -108,7 +115,7 @@ pub fn read_until_whitespace<R: BufRead>(reader: &mut R, max_size: usize) -> io:
 
     while amount_read < max_size {
         amount_read += 1;
-        
+
         let mut byte = [0; 1];
         reader.read_exact(&mut byte)?;
 
@@ -127,7 +134,10 @@ pub fn read_until_whitespace<R: BufRead>(reader: &mut R, max_size: usize) -> io:
     }
 
     if amount_read >= max_size {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Delimiter not found within {} bytes", max_size)));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("Delimiter not found within {} bytes", max_size),
+        ));
     }
 
     String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
@@ -138,7 +148,10 @@ pub fn read_line_capped<R: BufRead>(reader: &mut R, max_size: usize) -> io::Resu
     String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }
 
-pub fn read_null_terminated_string<R: BufRead>(reader: &mut R, max_size: usize) -> io::Result<String> {
+pub fn read_null_terminated_string<R: BufRead>(
+    reader: &mut R,
+    max_size: usize,
+) -> io::Result<String> {
     let bytes = read_until_capped(reader, 0, max_size)?;
     String::from_utf8(bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }

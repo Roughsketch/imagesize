@@ -1,4 +1,7 @@
-use crate::{util::{read_u16, Endian}, ImageResult, ImageSize};
+use crate::{
+    util::{read_u16, Endian},
+    ImageResult, ImageSize,
+};
 use std::io::{BufRead, Seek, SeekFrom};
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {

@@ -4,13 +4,20 @@ use imagesize::{blob_size, ImageSize};
 #[test]
 fn blob_test() {
     //  PNG Header with size 123x321
+    #[rustfmt::skip]
     let data = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 
                     0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 
                     0x00, 0x00, 0x00, 0x7B, 0x00, 0x00, 0x01, 0x41,
                     0x08, 0x06, 0x00, 0x00, 0x00, 0x9A, 0x38, 0xC4];
 
     let dim = blob_size(&data).unwrap();
-    assert_eq!(dim, ImageSize { width: 123, height: 321 });
+    assert_eq!(
+        dim,
+        ImageSize {
+            width: 123,
+            height: 321
+        }
+    );
 }
 
 #[test]
@@ -22,6 +29,7 @@ fn blob_too_small_test() {
 #[test]
 fn blob_test_fail() {
     //  Invalid PNG header (0x51 instead of 0x50)
+    #[rustfmt::skip]
     let data = vec![0x89, 0x51, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 
                     0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 
                     0x00, 0x00, 0x00, 0x7B, 0x00, 0x00, 0x01, 0x41,
@@ -38,6 +46,7 @@ fn gif_blob_too_small_test() {
 
 #[test]
 fn blob_test_partial_ico() {
+    #[rustfmt::skip]
     let data = vec![
         // Header (says 6 images are included)
         0x00, 0x00, 0x01, 0x00, 0x06, 0x00,
@@ -51,5 +60,11 @@ fn blob_test_partial_ico() {
         0xFF
     ];
     let dim = blob_size(&data).unwrap();
-    assert_eq!(dim, ImageSize { width: 10, height: 100 });
+    assert_eq!(
+        dim,
+        ImageSize {
+            width: 10,
+            height: 100
+        }
+    );
 }
