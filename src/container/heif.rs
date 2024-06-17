@@ -96,41 +96,41 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Compr
 
     let brand: [u8; 4] = header[8..12].try_into().unwrap();
 
-    if let Some(v) = inner_matches(&brand) {
+    if let Some(compression) = inner_matches(&brand) {
         // case 1: { heic, ... }
-        Some(v)
-    } else {
-        // case 2: { msf1, version, heic,  msf1, ... }
-        //           brand          brand2 brand3
-        // case 3: { msf1, version, msf1,  heic, ... }
-        //           brand          brand2 brand3
-        // REFS: https://github.com/nokiatech/heif/blob/be43efdf273ae9cf90e552b99f16ac43983f3d19/srcs/reader/heifreaderimpl.cpp#L738
-        let brands = [b"mif1", b"msf1", b"mif2", b"miaf"];
+        return Some(compression);
+    }
+    
+    // REFS: https://github.com/nokiatech/heif/blob/be43efdf273ae9cf90e552b99f16ac43983f3d19/srcs/reader/heifreaderimpl.cpp#L738
+    let brands = [b"mif1", b"msf1", b"mif2", b"miaf"];
 
-        if brands.contains(&&brand) {
-            let mut buf = [0; 12];
+    if brands.contains(&&brand) {
+        let mut buf = [0; 12];
 
-            if reader.read_exact(&mut buf).is_err() {
-                return Some(Compression::Unknown);
-            }
-
-            let brand2: [u8; 4] = buf[4..8].try_into().unwrap();
-            let brand3: [u8; 4] = buf[8..12].try_into().unwrap();
-
-            // case 2
-            if let Some(v) = inner_matches(&brand2) {
-                return Some(v);
-
-            // case 3
-            } else if brands.contains(&&brand2) {
-                if let Some(v) = inner_matches(&brand3) {
-                    return Some(v);
-                }
-            }
+        if reader.read_exact(&mut buf).is_err() {
+            return Some(Compression::Unknown);
         }
 
-        Some(Compression::Unknown)
+        let brand2: [u8; 4] = buf[4..8].try_into().unwrap();
+
+        if let Some(compression) = inner_matches(&brand2) {
+            // case 2: { msf1, version, heic,  msf1, ... }
+            //           brand          brand2 brand3
+            return Some(compression);
+        } 
+        
+        if brands.contains(&&brand2) {
+            // case 3: { msf1, version, msf1,  heic, ... }
+            //           brand          brand2 brand3
+            let brand3: [u8; 4] = buf[8..12].try_into().unwrap();
+
+            if let Some(compression) = inner_matches(&brand3) {
+                return Some(compression);
+            }
+        }
     }
+
+    Some(Compression::Unknown)
 }
 
 fn inner_matches(brand: &[u8; 4]) -> Option<Compression> {
