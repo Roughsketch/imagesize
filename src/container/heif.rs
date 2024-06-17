@@ -117,8 +117,8 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Compr
             // case 2: { msf1, version, heic,  msf1, ... }
             //           brand          brand2 brand3
             return Some(compression);
-        } 
-        
+        }
+
         if brands.contains(&&brand2) {
             // case 3: { msf1, version, msf1,  heic, ... }
             //           brand          brand2 brand3
@@ -160,16 +160,16 @@ fn inner_matches(brand: &[u8; 4]) -> Option<Compression> {
     // let feature_brands = [b"pred", b"auxl", b"thmb", b"base", b"dimg"];
     if hevc_brands.contains(&brand) {
         return Some(Compression::Hevc);
-    } 
-    
+    }
+
     if av1_brands.contains(&brand) {
         return Some(Compression::Av1);
     }
-    
+
     if jpeg_brands.contains(&brand) {
         return Some(Compression::Jpeg);
     }
-    
+
     None
 }
 
