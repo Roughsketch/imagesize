@@ -96,15 +96,14 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Compr
 
     let brand: [u8; 4] = header[8..12].try_into().unwrap();
 
-    // case 1: { heic, ... }
     if let Some(v) = inner_matches(&brand) {
+        // case 1: { heic, ... }
         Some(v)
-
-    // case 2: { msf1, version, heic,  msf1, ... }
-    //           brand          brand2 brand3
-    // case 3: { msf1, version, msf1,  heic, ... }
-    //           brand          brand2 brand3
     } else {
+        // case 2: { msf1, version, heic,  msf1, ... }
+        //           brand          brand2 brand3
+        // case 3: { msf1, version, msf1,  heic, ... }
+        //           brand          brand2 brand3
         // REFS: https://github.com/nokiatech/heif/blob/be43efdf273ae9cf90e552b99f16ac43983f3d19/srcs/reader/heifreaderimpl.cpp#L738
         let brands = [b"mif1", b"msf1", b"mif2", b"miaf"];
 
