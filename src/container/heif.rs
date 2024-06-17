@@ -106,9 +106,9 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Compr
     //           brand          brand2 brand3
     } else {
         // REFS: https://github.com/nokiatech/heif/blob/be43efdf273ae9cf90e552b99f16ac43983f3d19/srcs/reader/heifreaderimpl.cpp#L738
-        let m_brands = [b"mif1", b"msf1", b"mif2", b"miaf"];
+        let brands = [b"mif1", b"msf1", b"mif2", b"miaf"];
 
-        if m_brands.contains(&&brand) {
+        if brands.contains(&&brand) {
             let mut buf = [0; 12];
 
             if reader.read_exact(&mut buf).is_err() {
@@ -123,7 +123,7 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Compr
                 return Some(v);
 
             // case 3
-            } else if m_brands.contains(&&brand2) {
+            } else if brands.contains(&&brand2) {
                 if let Some(v) = inner_matches(&brand3) {
                     return Some(v);
                 }
