@@ -47,6 +47,7 @@ impl From<std::io::Error> for ImageError {
 pub type ImageResult<T> = Result<T, ImageError>;
 
 /// Types of image formats that this crate can identify.
+#[non_exhaustive]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageType {
     /// Animated sprite image format
