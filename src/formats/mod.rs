@@ -1,12 +1,10 @@
 pub mod aesprite;
-pub mod avif;
 pub mod bmp;
 pub mod dds;
 pub mod exr;
 pub mod farbfeld;
 pub mod gif;
 pub mod hdr;
-pub mod heif;
 pub mod ico;
 pub mod ilbm;
 pub mod jpeg;
@@ -21,7 +19,7 @@ pub mod tiff;
 pub mod vtf;
 pub mod webp;
 
-use crate::{ImageError, ImageResult, ImageType};
+use crate::{container, ImageError, ImageResult, ImageType};
 use std::io::{BufRead, Seek};
 
 pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
@@ -57,12 +55,8 @@ pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
         return Ok(ImageType::Webp);
     }
 
-    if heif::matches(&header) {
-        return Ok(ImageType::Heif);
-    }
-
-    if avif::matches(&header) {
-        return Ok(ImageType::Avif);
+    if let Some(c) = container::heif::matches(&header, reader) {
+        return Ok(ImageType::Heif(c));
     }
 
     if jxl::matches(&header) {

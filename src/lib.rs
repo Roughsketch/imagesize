@@ -4,10 +4,15 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor, Seek};
 use std::path::Path;
 
+mod container;
+mod formats;
 mod util;
 
-mod formats;
-use formats::*;
+pub use container::heif::Compression;
+use {
+    container::heif::{self},
+    formats::*,
+};
 
 /// An Error type used in failure cases.
 #[derive(Debug)]
@@ -47,8 +52,6 @@ pub enum ImageType {
     /// Animated sprite image format
     /// <https://github.com/aseprite/aseprite>
     Aseprite,
-    /// AV1 Image File Format
-    Avif,
     /// Standard Bitmap
     Bmp,
     /// DirectDraw Surface
@@ -62,8 +65,8 @@ pub enum ImageType {
     Gif,
     /// Radiance HDR
     Hdr,
-    /// High Efficiency Image File Format
-    Heif,
+    /// Image Container Format
+    Heif(Compression),
     /// Icon file
     Ico,
     /// Interleaved Bitmap
@@ -250,14 +253,12 @@ pub fn reader_size<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageSize> {
 fn dispatch_header<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     match formats::image_type(reader)? {
         ImageType::Aseprite => aesprite::size(reader),
-        ImageType::Avif => heif::size(reader), // AVIF uses HEIF size on purpose
         ImageType::Bmp => bmp::size(reader),
         ImageType::Dds => dds::size(reader),
         ImageType::Exr => exr::size(reader),
         ImageType::Farbfeld => farbfeld::size(reader),
         ImageType::Gif => gif::size(reader),
         ImageType::Hdr => hdr::size(reader),
-        ImageType::Heif => heif::size(reader),
         ImageType::Ico => ico::size(reader),
         ImageType::Ilbm => ilbm::size(reader),
         ImageType::Jpeg => jpeg::size(reader),
@@ -271,5 +272,7 @@ fn dispatch_header<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> 
         ImageType::Tiff => tiff::size(reader),
         ImageType::Vtf => vtf::size(reader),
         ImageType::Webp => webp::size(reader),
+
+        ImageType::Heif(..) => heif::size(reader),
     }
 }
