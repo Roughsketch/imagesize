@@ -100,7 +100,7 @@ pub fn matches<R: BufRead + Seek>(header: &[u8], reader: &mut R) -> Option<Compr
         // case 1: { heic, ... }
         return Some(compression);
     }
-    
+
     // REFS: https://github.com/nokiatech/heif/blob/be43efdf273ae9cf90e552b99f16ac43983f3d19/srcs/reader/heifreaderimpl.cpp#L738
     let brands = [b"mif1", b"msf1", b"mif2", b"miaf"];
 
@@ -158,16 +158,19 @@ fn inner_matches(brand: &[u8; 4]) -> Option<Compression> {
     // REFS: https://github.com/nokiatech/heif/blob/be43efdf273ae9cf90e552b99f16ac43983f3d19/srcs/reader/heifreaderimpl.cpp#L1415
     // REFS: https://github.com/nokiatech/heif/blob/be43efdf273ae9cf90e552b99f16ac43983f3d19/srcs/api-cpp/ImageItem.h#L37
     // let feature_brands = [b"pred", b"auxl", b"thmb", b"base", b"dimg"];
-
-    Some(if hevc_brands.contains(&brand) {
-        Compression::Hevc
-    } else if av1_brands.contains(&brand) {
-        Compression::Av1
-    } else if jpeg_brands.contains(&brand) {
-        Compression::Jpeg
-    } else {
-        return None;
-    })
+    if hevc_brands.contains(&brand) {
+        return Some(Compression::Hevc);
+    } 
+    
+    if av1_brands.contains(&brand) {
+        return Some(Compression::Av1);
+    }
+    
+    if jpeg_brands.contains(&brand) {
+        return Some(Compression::Jpeg);
+    }
+    
+    None
 }
 
 fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32> {
