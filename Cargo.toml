@@ -7,7 +7,7 @@ description = "Quick probing of image dimensions without loading the entire file
 documentation = "https://docs.rs/imagesize"
 repository = "https://github.com/Roughsketch/imagesize"
 readme = "README.md"
-keywords = ["image", "size"]
+keywords = ["dimensions", "image", "metadata", "size"]
 categories = ["multimedia", "multimedia::images"]
 license = "MIT"
 exclude = ["tests/*"]
@@ -16,7 +16,7 @@ exclude = ["tests/*"]
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
-walkdir = "2.3.3"
+walkdir = "2.3"
 
 [[bench]]
 name = "parse_benchmark"
