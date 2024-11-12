@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "pnm")]
 fn pnm_same_line_test() {
     let dim = size("tests/images/pnm/P1/fool.ascii.pbm").unwrap();
     assert_eq!(
@@ -14,6 +15,7 @@ fn pnm_same_line_test() {
 }
 
 #[test]
+#[cfg(feature = "pnm")]
 fn pnm_p1_test() {
     let dim = size("tests/images/pnm/P1/feep.ascii.pbm").unwrap();
     assert_eq!(
@@ -26,6 +28,7 @@ fn pnm_p1_test() {
 }
 
 #[test]
+#[cfg(feature = "pnm")]
 fn pnm_p2_test() {
     let dim = size("tests/images/pnm/P2/feep.ascii.pgm").unwrap();
     assert_eq!(
@@ -38,6 +41,7 @@ fn pnm_p2_test() {
 }
 
 #[test]
+#[cfg(feature = "pnm")]
 fn pnm_p3_test() {
     let dim = size("tests/images/pnm/P3/feep.ascii.ppm").unwrap();
     assert_eq!(
@@ -50,6 +54,7 @@ fn pnm_p3_test() {
 }
 
 #[test]
+#[cfg(feature = "pnm")]
 fn pnm_p4_test() {
     let dim = size("tests/images/pnm/P4/feep.pbm").unwrap();
     assert_eq!(
@@ -62,6 +67,7 @@ fn pnm_p4_test() {
 }
 
 #[test]
+#[cfg(feature = "pnm")]
 fn pnm_p5_test() {
     let dim = size("tests/images/pnm/P5/feep.pgm").unwrap();
     assert_eq!(
@@ -74,6 +80,7 @@ fn pnm_p5_test() {
 }
 
 #[test]
+#[cfg(feature = "pnm")]
 fn pnm_p6_test() {
     let dim = size("tests/images/pnm/P6/pbmlib.ppm").unwrap();
     assert_eq!(

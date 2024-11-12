@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "webp")]
 fn webp_test() {
     let dim = size("tests/images/webp/test.webp").unwrap();
     assert_eq!(
@@ -14,6 +15,7 @@ fn webp_test() {
 }
 
 #[test]
+#[cfg(feature = "webp")]
 fn riffx_webp_test() {
     let dim = size("tests/images/webp/riffx.webp").unwrap();
     assert_eq!(
@@ -26,6 +28,7 @@ fn riffx_webp_test() {
 }
 
 #[test]
+#[cfg(feature = "webp")]
 fn webp_extended() {
     let dim = size("tests/images/webp/extended.16x32.webp").unwrap();
     assert_eq!(
@@ -38,6 +41,7 @@ fn webp_extended() {
 }
 
 #[test]
+#[cfg(feature = "webp")]
 fn webp_lossless() {
     let dim = size("tests/images/webp/lossless.16x32.webp").unwrap();
     assert_eq!(
@@ -50,6 +54,7 @@ fn webp_lossless() {
 }
 
 #[test]
+#[cfg(feature = "webp")]
 fn webp_lossy() {
     let dim = size("tests/images/webp/lossy.16x32.webp").unwrap();
     assert_eq!(

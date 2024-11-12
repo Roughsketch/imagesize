@@ -4,6 +4,7 @@ use imagesize::{size, ImageSize};
 // Small image (<= 5 bits and multiple of 8)
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_small() {
     let dim = size("tests/images/jxl/valid_small.jxl").unwrap();
     assert_eq!(
@@ -18,6 +19,7 @@ fn jxl_valid_small() {
 // 9 bits width, {9, 13, 18, 30} bits height
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_9w_9h() {
     let dim = size("tests/images/jxl/valid_9w_9h.jxl").unwrap();
     assert_eq!(
@@ -30,6 +32,7 @@ fn jxl_valid_9w_9h() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_9w_13h() {
     let dim = size("tests/images/jxl/valid_9w_13h.jxl").unwrap();
     assert_eq!(
@@ -42,6 +45,7 @@ fn jxl_valid_9w_13h() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_9w_18h() {
     let dim = size("tests/images/jxl/valid_9w_18h.jxl").unwrap();
     assert_eq!(
@@ -54,6 +58,7 @@ fn jxl_valid_9w_18h() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_9w_30h() {
     let dim = size("tests/images/jxl/valid_9w_30h.jxl").unwrap();
     assert_eq!(
@@ -68,6 +73,7 @@ fn jxl_valid_9w_30h() {
 // {13, 18, 30} bits width, 9 bits height
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_13w_9h() {
     let dim = size("tests/images/jxl/valid_13w_9h.jxl").unwrap();
     assert_eq!(
@@ -80,6 +86,7 @@ fn jxl_valid_13w_9h() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_18w_9h() {
     let dim = size("tests/images/jxl/valid_18w_9h.jxl").unwrap();
     assert_eq!(
@@ -92,6 +99,7 @@ fn jxl_valid_18w_9h() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_30w_9h() {
     let dim = size("tests/images/jxl/valid_30w_9h.jxl").unwrap();
     assert_eq!(
@@ -106,6 +114,7 @@ fn jxl_valid_30w_9h() {
 // Common ratios
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_ratio1() {
     let dim = size("tests/images/jxl/valid_ratio1.jxl").unwrap();
     assert_eq!(
@@ -118,6 +127,7 @@ fn jxl_valid_ratio1() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_ratio2() {
     let dim = size("tests/images/jxl/valid_ratio2.jxl").unwrap();
     assert_eq!(
@@ -130,6 +140,7 @@ fn jxl_valid_ratio2() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_ratio3() {
     let dim = size("tests/images/jxl/valid_ratio3.jxl").unwrap();
     assert_eq!(
@@ -142,6 +153,7 @@ fn jxl_valid_ratio3() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_ratio4() {
     let dim = size("tests/images/jxl/valid_ratio4.jxl").unwrap();
     assert_eq!(
@@ -154,6 +166,7 @@ fn jxl_valid_ratio4() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_ratio5() {
     let dim = size("tests/images/jxl/valid_ratio5.jxl").unwrap();
     assert_eq!(
@@ -166,6 +179,7 @@ fn jxl_valid_ratio5() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_ratio6() {
     let dim = size("tests/images/jxl/valid_ratio6.jxl").unwrap();
     assert_eq!(
@@ -178,6 +192,7 @@ fn jxl_valid_ratio6() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_ratio7() {
     let dim = size("tests/images/jxl/valid_ratio7.jxl").unwrap();
     assert_eq!(
@@ -192,6 +207,7 @@ fn jxl_valid_ratio7() {
 // Container format
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_box_jxlc() {
     let dim = size("tests/images/jxl/valid_box_jxlc.jxl").unwrap();
     assert_eq!(
@@ -204,6 +220,7 @@ fn jxl_valid_box_jxlc() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_box_jxlp() {
     let dim = size("tests/images/jxl/valid_box_jxlp.jxl").unwrap();
     assert_eq!(
@@ -218,6 +235,7 @@ fn jxl_valid_box_jxlp() {
 // Orientation
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_orientation0() {
     let dim = size("tests/images/jxl/valid_orientation0.jxl").unwrap();
     assert_eq!(
@@ -230,6 +248,7 @@ fn jxl_valid_orientation0() {
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_valid_orientation4() {
     let dim = size("tests/images/jxl/valid_orientation4.jxl").unwrap();
     assert_eq!(
@@ -244,16 +263,19 @@ fn jxl_valid_orientation4() {
 // Bad inputs
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_err_box() {
     assert!(size("tests/images/jxl/err_box.jxl").is_err());
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_err_header() {
     assert!(size("tests/images/jxl/err_header.jxl").is_err());
 }
 
 #[test]
+#[cfg(feature = "jxl")]
 fn jxl_err_signature() {
     assert!(size("tests/images/jxl/err_signature.jxl").is_err());
 }

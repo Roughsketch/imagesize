@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "gif")]
 fn gif_test() {
     let dim = size("tests/images/gif/test.gif").unwrap();
     assert_eq!(

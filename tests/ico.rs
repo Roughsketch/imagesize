@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "ico")]
 fn ico_test() {
     let dim = size("tests/images/ico/test.ico").unwrap();
     assert_eq!(
@@ -14,6 +15,7 @@ fn ico_test() {
 }
 
 #[test]
+#[cfg(feature = "ico")]
 fn max_size_test() {
     let dim = size("tests/images/ico/max_width.ico").unwrap();
     assert_eq!(
@@ -26,6 +28,7 @@ fn max_size_test() {
 }
 
 #[test]
+#[cfg(feature = "ico")]
 fn multiple_test() {
     // Contains 48x48, 32x32, and 16x16 versions of the same image
     let dim = size("tests/images/ico/multiple.ico").unwrap();

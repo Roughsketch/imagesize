@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "tiff")]
 fn tiff_test() {
     let dim = size("tests/images/tif/test.tif").unwrap();
     assert_eq!(
@@ -14,6 +15,7 @@ fn tiff_test() {
 }
 
 #[test]
+#[cfg(feature = "tiff")]
 fn tiff_test_16bit_size() {
     let dim = size("tests/images/tif/test_16.tif").unwrap();
     assert_eq!(

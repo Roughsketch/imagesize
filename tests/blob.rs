@@ -2,6 +2,7 @@
 use imagesize::{blob_size, ImageSize};
 
 #[test]
+#[cfg(feature = "png")]
 fn blob_test() {
     //  PNG Header with size 123x321
     #[rustfmt::skip]
@@ -45,6 +46,7 @@ fn gif_blob_too_small_test() {
 }
 
 #[test]
+#[cfg(feature = "ico")]
 fn blob_test_partial_ico() {
     #[rustfmt::skip]
     let data = vec![
