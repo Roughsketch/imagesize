@@ -39,8 +39,11 @@ pub mod vtf;
 #[cfg(feature = "webp")]
 pub mod webp;
 
-use crate::{container, ImageError, ImageResult, ImageType};
+use crate::{ImageError, ImageResult, ImageType};
 use std::io::{BufRead, Seek};
+
+#[cfg(feature = "heif")]
+use crate::container;
 
 pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
     let mut header = [0; 12];

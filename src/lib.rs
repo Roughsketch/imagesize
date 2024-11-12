@@ -4,15 +4,17 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor, Seek};
 use std::path::Path;
 
-mod container;
 mod formats;
 mod util;
 
+use formats::*;
+
+#[cfg(feature = "heif")]
+mod container;
+#[cfg(feature = "heif")]
 pub use container::heif::Compression;
-use {
-    container::heif::{self},
-    formats::*,
-};
+#[cfg(feature = "heif")]
+use container::heif::{self};
 
 /// An Error type used in failure cases.
 #[derive(Debug)]
