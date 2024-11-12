@@ -6,17 +6,15 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor, Seek};
 use std::path::Path;
 
+mod container;
 mod formats;
 mod util;
 
-use formats::*;
-
-#[cfg(feature = "heif")]
-mod container;
-#[cfg(feature = "heif")]
 pub use container::heif::Compression;
-#[cfg(feature = "heif")]
-use container::heif::{self};
+use {
+    container::heif::{self},
+    formats::*,
+};
 
 /// An Error type used in failure cases.
 #[derive(Debug)]
