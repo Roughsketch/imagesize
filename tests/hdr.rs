@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "hdr")]
 fn hdr_test() {
     let dim = size("tests/images/hdr/test.hdr").unwrap();
     assert_eq!(

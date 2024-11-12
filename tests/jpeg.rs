@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "jpeg")]
 fn jpeg_test() {
     let dim = size("tests/images/jpg/test.jpg").unwrap();
     assert_eq!(
@@ -14,6 +15,7 @@ fn jpeg_test() {
 }
 
 #[test]
+#[cfg(feature = "jpeg")]
 fn jpeg_extra_info_test() {
     let dim = size("tests/images/jpg/extra.jpg").unwrap();
     assert_eq!(
@@ -26,6 +28,7 @@ fn jpeg_extra_info_test() {
 }
 
 #[test]
+#[cfg(feature = "jpeg")]
 fn issue_9_test() {
     let dim = size("tests/images/jpg/issue-9.jpg").unwrap();
     assert_eq!(
@@ -38,6 +41,7 @@ fn issue_9_test() {
 }
 
 #[test]
+#[cfg(feature = "jpeg")]
 fn jpg_unexpected_eof() {
     let dim = size("tests/images/jpg/unexpected_eof.jpg").unwrap();
     assert_eq!(
@@ -50,6 +54,7 @@ fn jpg_unexpected_eof() {
 }
 
 #[test]
+#[cfg(feature = "jpeg")]
 fn jpg_unexpected_eof_2() {
     let dim = size("tests/images/jpg/unexpected_eof_2.jpg").unwrap();
     assert_eq!(
@@ -62,6 +67,7 @@ fn jpg_unexpected_eof_2() {
 }
 
 #[test]
+#[cfg(feature = "jpeg")]
 fn jpg_unexpected_eof_3() {
     let dim = size("tests/images/jpg/unexpected_eof_3.jpg").unwrap();
     assert_eq!(
@@ -74,6 +80,7 @@ fn jpg_unexpected_eof_3() {
 }
 
 #[test]
+#[cfg(feature = "jpeg")]
 fn jpg_wrong_size() {
     let dim = size("tests/images/jpg/wrong_size.jpg").unwrap();
     assert_eq!(

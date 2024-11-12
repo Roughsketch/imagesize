@@ -3,6 +3,7 @@ use imagesize::{reader_size, ImageSize};
 use std::io::Cursor;
 
 #[test]
+#[cfg(feature = "png")]
 fn reader_test() {
     // PNG Header with size 123x321
     #[rustfmt::skip]
@@ -23,6 +24,7 @@ fn reader_test() {
 }
 
 #[test]
+#[cfg(feature = "webp")]
 fn reader_test_fail() {
     // only header part of webp
     #[rustfmt::skip]

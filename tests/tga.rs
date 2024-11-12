@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "tga")]
 fn tga_test() {
     let dim = size("tests/images/tga/test.tga").unwrap();
     assert_eq!(
@@ -14,6 +15,7 @@ fn tga_test() {
 }
 
 #[test]
+#[cfg(feature = "tga")]
 fn tga_type_1_test() {
     let dim = size("tests/images/tga/type_1.tga").unwrap();
     assert_eq!(
@@ -26,6 +28,7 @@ fn tga_type_1_test() {
 }
 
 #[test]
+#[cfg(feature = "tga")]
 fn tga_type_2_test() {
     let dim = size("tests/images/tga/type_2.tga").unwrap();
     assert_eq!(
@@ -38,6 +41,7 @@ fn tga_type_2_test() {
 }
 
 #[test]
+#[cfg(feature = "tga")]
 fn tga_type_10_test() {
     let dim = size("tests/images/tga/type_10.tga").unwrap();
     assert_eq!(
@@ -50,6 +54,7 @@ fn tga_type_10_test() {
 }
 
 #[test]
+#[cfg(feature = "tga")]
 fn tga_verify() {
     let mut paths = Vec::new();
     for file in walkdir::WalkDir::new("tests/images/tga")

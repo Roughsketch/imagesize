@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "aesprite")]
 fn aseprite_test() {
     let dim = size("tests/images/aseprite/1.ase").unwrap();
 

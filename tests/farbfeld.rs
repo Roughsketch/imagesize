@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "farbfeld")]
 fn farbfeld_test() {
     let dim = size("tests/images/farbfeld/test.ff").unwrap();
     assert_eq!(
