@@ -2,7 +2,7 @@
 use imagesize::{image_type, size, Compression, ImageSize, ImageType};
 
 #[test]
-#[cfg(feature = "avif")]
+#[cfg(feature = "heif")]
 fn avif_test() {
     let dim = size("tests/images/avif/test.avif").unwrap();
     assert_eq!(
@@ -15,7 +15,7 @@ fn avif_test() {
 }
 
 #[test]
-#[cfg(feature = "avif")]
+#[cfg(feature = "heif")]
 fn avif_multi_picks_largest() {
     let dim = size("tests/images/avif/test.avifs").unwrap();
     assert_eq!(
@@ -28,7 +28,7 @@ fn avif_multi_picks_largest() {
 }
 
 #[test]
-#[cfg(feature = "avif")]
+#[cfg(feature = "heif")]
 fn avif_type() {
     use std::{fs::File, io::Read};
 
@@ -41,7 +41,7 @@ fn avif_type() {
 }
 
 #[test]
-#[cfg(feature = "avif")]
+#[cfg(feature = "heif")]
 fn avif_seq_type() {
     use std::{fs::File, io::Read};
 
