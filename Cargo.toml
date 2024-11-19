@@ -21,3 +21,51 @@ walkdir = "2.3"
 [[bench]]
 name = "parse_benchmark"
 harness = false
+
+[features]
+default = [
+    "aesprite",
+    "bmp",
+    "dds",
+    "exr",
+    "farbfeld",
+    "gif",
+    "hdr",
+    "ico",
+    "ilbm",
+    "jpeg",
+    "jxl",
+    "ktx2",
+    "mod",
+    "png",
+    "pnm",
+    "psd",
+    "qoi",
+    "tga",
+    "tiff",
+    "vtf",
+    "webp",
+    "heif",
+]
+aesprite = []
+bmp = []
+dds = []
+exr = []
+farbfeld = []
+gif = []
+hdr = []
+ico = []
+ilbm = []
+jpeg = []
+jxl = []
+ktx2 = []
+mod = []
+png = []
+pnm = []
+psd = []
+qoi = []
+tga = []
+tiff = []
+vtf = []
+webp = []
+heif = []

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::error::Error;
 use std::fmt;
 use std::fs::File;
@@ -52,48 +54,69 @@ pub type ImageResult<T> = Result<T, ImageError>;
 pub enum ImageType {
     /// Animated sprite image format
     /// <https://github.com/aseprite/aseprite>
+    #[cfg(feature = "aesprite")]
     Aseprite,
     /// Standard Bitmap
+    #[cfg(feature = "bmp")]
     Bmp,
     /// DirectDraw Surface
+    #[cfg(feature = "dds")]
     Dds,
     /// OpenEXR
+    #[cfg(feature = "exr")]
     Exr,
     /// Farbfeld
     /// <https://tools.suckless.org/farbfeld/>
+    #[cfg(feature = "farbfeld")]
     Farbfeld,
     /// Standard GIF
+    #[cfg(feature = "gif")]
     Gif,
     /// Radiance HDR
+    #[cfg(feature = "hdr")]
     Hdr,
     /// Image Container Format
+    #[cfg(feature = "heif")]
     Heif(Compression),
     /// Icon file
+    #[cfg(feature = "ico")]
     Ico,
     /// Interleaved Bitmap
+    #[cfg(feature = "ilbm")]
     Ilbm,
     /// Standard JPEG
+    #[cfg(feature = "jpeg")]
     Jpeg,
     /// JPEG XL
+    #[cfg(feature = "jxl")]
     Jxl,
     /// Khronos Texture Container
+    #[cfg(feature = "ktx2")]
     Ktx2,
     /// Standard PNG
+    #[cfg(feature = "png")]
     Png,
     /// Portable Any Map
+    #[cfg(feature = "pnm")]
     Pnm,
     /// Photoshop Document
+    #[cfg(feature = "psd")]
     Psd,
     /// Quite OK Image Format
     /// <https://qoiformat.org/>
+    #[cfg(feature = "qoi")]
     Qoi,
     /// Truevision Graphics Adapter
+    #[cfg(feature = "tga")]
     Tga,
     /// Standard TIFF
+    #[cfg(feature = "tiff")]
     Tiff,
     /// Valve Texture Format
+    #[cfg(feature = "vtf")]
     Vtf,
     /// Standard Webp
+    #[cfg(feature = "webp")]
     Webp,
 }
 
@@ -253,27 +276,48 @@ pub fn reader_size<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageSize> {
 /// * `header` - The header of the file
 fn dispatch_header<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     match formats::image_type(reader)? {
+        #[cfg(feature = "aesprite")]
         ImageType::Aseprite => aesprite::size(reader),
+        #[cfg(feature = "bmp")]
         ImageType::Bmp => bmp::size(reader),
+        #[cfg(feature = "dds")]
         ImageType::Dds => dds::size(reader),
+        #[cfg(feature = "exr")]
         ImageType::Exr => exr::size(reader),
+        #[cfg(feature = "farbfeld")]
         ImageType::Farbfeld => farbfeld::size(reader),
+        #[cfg(feature = "gif")]
         ImageType::Gif => gif::size(reader),
+        #[cfg(feature = "hdr")]
         ImageType::Hdr => hdr::size(reader),
+        #[cfg(feature = "ico")]
         ImageType::Ico => ico::size(reader),
+        #[cfg(feature = "ilbm")]
         ImageType::Ilbm => ilbm::size(reader),
+        #[cfg(feature = "jpeg")]
         ImageType::Jpeg => jpeg::size(reader),
+        #[cfg(feature = "jxl")]
         ImageType::Jxl => jxl::size(reader),
+        #[cfg(feature = "ktx2")]
         ImageType::Ktx2 => ktx2::size(reader),
+        #[cfg(feature = "png")]
         ImageType::Png => png::size(reader),
+        #[cfg(feature = "pnm")]
         ImageType::Pnm => pnm::size(reader),
+        #[cfg(feature = "psd")]
         ImageType::Psd => psd::size(reader),
+        #[cfg(feature = "qoi")]
         ImageType::Qoi => qoi::size(reader),
+        #[cfg(feature = "tga")]
         ImageType::Tga => tga::size(reader),
+        #[cfg(feature = "tiff")]
         ImageType::Tiff => tiff::size(reader),
+        #[cfg(feature = "vtf")]
         ImageType::Vtf => vtf::size(reader),
+        #[cfg(feature = "webp")]
         ImageType::Webp => webp::size(reader),
 
+        #[cfg(feature = "heif")]
         ImageType::Heif(..) => heif::size(reader),
     }
 }

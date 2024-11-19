@@ -2,6 +2,7 @@
 use imagesize::{size, ImageSize};
 
 #[test]
+#[cfg(feature = "vtf")]
 fn vtf_test() {
     let dim = size("tests/images/vtf/test.vtf").unwrap();
     assert_eq!(

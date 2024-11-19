@@ -2,6 +2,7 @@
 use imagesize::{image_type, size, Compression, ImageSize, ImageType};
 
 #[test]
+#[cfg(feature = "heif")]
 fn heic_test() {
     let dim = size("tests/images/heic/heic.heic").unwrap();
     assert_eq!(
@@ -14,6 +15,7 @@ fn heic_test() {
 }
 
 #[test]
+#[cfg(feature = "heif")]
 fn heic_multi_picks_largest() {
     let dim = size("tests/images/heic/heic.heic").unwrap();
     assert_eq!(
@@ -26,6 +28,7 @@ fn heic_multi_picks_largest() {
 }
 
 #[test]
+#[cfg(feature = "heif")]
 fn heic_type() {
     use std::{fs::File, io::Read};
 
@@ -38,6 +41,7 @@ fn heic_type() {
 }
 
 #[test]
+#[cfg(feature = "heif")]
 fn heic_msf1_type() {
     use std::{fs::File, io::Read};
 
