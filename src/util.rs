@@ -21,14 +21,8 @@ pub fn read_u32<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> Image
     reader.read_exact(&mut buf)?;
 
     match endianness {
-        Endian::Little => Ok(((buf[3] as u32) << 24)
-            | ((buf[2] as u32) << 16)
-            | ((buf[1] as u32) << 8)
-            | (buf[0] as u32)),
-        Endian::Big => Ok(((buf[0] as u32) << 24)
-            | ((buf[1] as u32) << 16)
-            | ((buf[2] as u32) << 8)
-            | (buf[3] as u32)),
+        Endian::Little => Ok(u32::from_le_bytes(buf)),
+        Endian::Big => Ok(u32::from_be_bytes(buf)),
     }
 }
 
@@ -47,8 +41,8 @@ pub fn read_u16<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> Image
     reader.read_exact(&mut buf)?;
 
     match endianness {
-        Endian::Little => Ok(((buf[1] as u16) << 8) | (buf[0] as u16)),
-        Endian::Big => Ok(((buf[0] as u16) << 8) | (buf[1] as u16)),
+        Endian::Little => Ok(u16::from_le_bytes(buf)),
+        Endian::Big => Ok(u16::from_be_bytes(buf)),
     }
 }
 
