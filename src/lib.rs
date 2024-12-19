@@ -269,6 +269,18 @@ pub fn reader_size<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageSize> {
     dispatch_header(&mut reader)
 }
 
+/// Get the image type from a reader
+///
+/// # Arguments
+/// * `reader` - A reader for the data
+///
+/// # Remarks
+///
+/// This will check the header to determine what image type the data is.
+pub fn reader_type<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageType> {
+    formats::image_type(reader)
+}
+
 /// Calls the correct image size method based on the image type
 ///
 /// # Arguments
