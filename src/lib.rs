@@ -127,27 +127,48 @@ impl ImageType {
     /// * `reader` - A reader for the data
     pub fn reader_size<R: BufRead + Seek>(&self, reader: &mut R) -> ImageResult<ImageSize> {
         match self {
+            #[cfg(feature = "aesprite")]
             ImageType::Aseprite => aesprite::size(reader),
+            #[cfg(feature = "bmp")]
             ImageType::Bmp => bmp::size(reader),
+            #[cfg(feature = "dds")]
             ImageType::Dds => dds::size(reader),
+            #[cfg(feature = "exr")]
             ImageType::Exr => exr::size(reader),
+            #[cfg(feature = "farbfeld")]
             ImageType::Farbfeld => farbfeld::size(reader),
+            #[cfg(feature = "gif")]
             ImageType::Gif => gif::size(reader),
+            #[cfg(feature = "hdr")]
             ImageType::Hdr => hdr::size(reader),
+            #[cfg(feature = "ico")]
             ImageType::Ico => ico::size(reader),
+            #[cfg(feature = "ilbm")]
             ImageType::Ilbm => ilbm::size(reader),
+            #[cfg(feature = "jpeg")]
             ImageType::Jpeg => jpeg::size(reader),
+            #[cfg(feature = "jxl")]
             ImageType::Jxl => jxl::size(reader),
+            #[cfg(feature = "ktx2")]
             ImageType::Ktx2 => ktx2::size(reader),
+            #[cfg(feature = "png")]
             ImageType::Png => png::size(reader),
+            #[cfg(feature = "pnm")]
             ImageType::Pnm => pnm::size(reader),
+            #[cfg(feature = "psd")]
             ImageType::Psd => psd::size(reader),
+            #[cfg(feature = "qoi")]
             ImageType::Qoi => qoi::size(reader),
+            #[cfg(feature = "tga")]
             ImageType::Tga => tga::size(reader),
+            #[cfg(feature = "tiff")]
             ImageType::Tiff => tiff::size(reader),
+            #[cfg(feature = "vtf")]
             ImageType::Vtf => vtf::size(reader),
+            #[cfg(feature = "webp")]
             ImageType::Webp => webp::size(reader),
-            
+
+            #[cfg(feature = "heif")]
             ImageType::Heif(..) => heif::size(reader),
         }
     }
