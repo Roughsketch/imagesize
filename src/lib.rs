@@ -120,6 +120,60 @@ pub enum ImageType {
     Webp,
 }
 
+impl ImageType {
+    /// Calls the correct image size method based on the image type
+    ///
+    /// # Arguments
+    /// * `reader` - A reader for the data
+    pub fn reader_size<R: BufRead + Seek>(&self, reader: &mut R) -> ImageResult<ImageSize> {
+        match self {
+            #[cfg(feature = "aesprite")]
+            ImageType::Aseprite => aesprite::size(reader),
+            #[cfg(feature = "bmp")]
+            ImageType::Bmp => bmp::size(reader),
+            #[cfg(feature = "dds")]
+            ImageType::Dds => dds::size(reader),
+            #[cfg(feature = "exr")]
+            ImageType::Exr => exr::size(reader),
+            #[cfg(feature = "farbfeld")]
+            ImageType::Farbfeld => farbfeld::size(reader),
+            #[cfg(feature = "gif")]
+            ImageType::Gif => gif::size(reader),
+            #[cfg(feature = "hdr")]
+            ImageType::Hdr => hdr::size(reader),
+            #[cfg(feature = "ico")]
+            ImageType::Ico => ico::size(reader),
+            #[cfg(feature = "ilbm")]
+            ImageType::Ilbm => ilbm::size(reader),
+            #[cfg(feature = "jpeg")]
+            ImageType::Jpeg => jpeg::size(reader),
+            #[cfg(feature = "jxl")]
+            ImageType::Jxl => jxl::size(reader),
+            #[cfg(feature = "ktx2")]
+            ImageType::Ktx2 => ktx2::size(reader),
+            #[cfg(feature = "png")]
+            ImageType::Png => png::size(reader),
+            #[cfg(feature = "pnm")]
+            ImageType::Pnm => pnm::size(reader),
+            #[cfg(feature = "psd")]
+            ImageType::Psd => psd::size(reader),
+            #[cfg(feature = "qoi")]
+            ImageType::Qoi => qoi::size(reader),
+            #[cfg(feature = "tga")]
+            ImageType::Tga => tga::size(reader),
+            #[cfg(feature = "tiff")]
+            ImageType::Tiff => tiff::size(reader),
+            #[cfg(feature = "vtf")]
+            ImageType::Vtf => vtf::size(reader),
+            #[cfg(feature = "webp")]
+            ImageType::Webp => webp::size(reader),
+
+            #[cfg(feature = "heif")]
+            ImageType::Heif(..) => heif::size(reader),
+        }
+    }
+}
+
 /// Holds the size information of an image.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ImageSize {
@@ -266,58 +320,17 @@ pub fn blob_size(data: &[u8]) -> ImageResult<ImageSize> {
 ///
 /// [`ImageError`]: enum.ImageError.html
 pub fn reader_size<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageSize> {
-    dispatch_header(&mut reader)
+    reader_type(&mut reader)?.reader_size(&mut reader)
 }
 
-/// Calls the correct image size method based on the image type
+/// Get the image type from a reader
 ///
 /// # Arguments
 /// * `reader` - A reader for the data
-/// * `header` - The header of the file
-fn dispatch_header<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
-    match formats::image_type(reader)? {
-        #[cfg(feature = "aesprite")]
-        ImageType::Aseprite => aesprite::size(reader),
-        #[cfg(feature = "bmp")]
-        ImageType::Bmp => bmp::size(reader),
-        #[cfg(feature = "dds")]
-        ImageType::Dds => dds::size(reader),
-        #[cfg(feature = "exr")]
-        ImageType::Exr => exr::size(reader),
-        #[cfg(feature = "farbfeld")]
-        ImageType::Farbfeld => farbfeld::size(reader),
-        #[cfg(feature = "gif")]
-        ImageType::Gif => gif::size(reader),
-        #[cfg(feature = "hdr")]
-        ImageType::Hdr => hdr::size(reader),
-        #[cfg(feature = "ico")]
-        ImageType::Ico => ico::size(reader),
-        #[cfg(feature = "ilbm")]
-        ImageType::Ilbm => ilbm::size(reader),
-        #[cfg(feature = "jpeg")]
-        ImageType::Jpeg => jpeg::size(reader),
-        #[cfg(feature = "jxl")]
-        ImageType::Jxl => jxl::size(reader),
-        #[cfg(feature = "ktx2")]
-        ImageType::Ktx2 => ktx2::size(reader),
-        #[cfg(feature = "png")]
-        ImageType::Png => png::size(reader),
-        #[cfg(feature = "pnm")]
-        ImageType::Pnm => pnm::size(reader),
-        #[cfg(feature = "psd")]
-        ImageType::Psd => psd::size(reader),
-        #[cfg(feature = "qoi")]
-        ImageType::Qoi => qoi::size(reader),
-        #[cfg(feature = "tga")]
-        ImageType::Tga => tga::size(reader),
-        #[cfg(feature = "tiff")]
-        ImageType::Tiff => tiff::size(reader),
-        #[cfg(feature = "vtf")]
-        ImageType::Vtf => vtf::size(reader),
-        #[cfg(feature = "webp")]
-        ImageType::Webp => webp::size(reader),
-
-        #[cfg(feature = "heif")]
-        ImageType::Heif(..) => heif::size(reader),
-    }
+///
+/// # Remarks
+///
+/// This will check the header to determine what image type the data is.
+pub fn reader_type<R: BufRead + Seek>(mut reader: R) -> ImageResult<ImageType> {
+    formats::image_type(&mut reader)
 }
