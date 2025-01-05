@@ -1,7 +1,13 @@
 use crate::util::*;
 use crate::{ImageResult, ImageSize};
 
-use std::io::{BufRead, Cursor, Seek, SeekFrom};
+use std::io::{BufRead, Cursor, Read, Seek, SeekFrom};
+
+#[derive(Debug, PartialEq)]
+enum Type {
+    Tiff,
+    BigTiff,
+}
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     reader.seek(SeekFrom::Start(0))?;
@@ -20,10 +26,43 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid TIFF header").into(),
         );
     };
+    let type_marker = read_u16(reader, &endianness)?;
+    let tiff_type = if type_marker == 42 {
+        Type::Tiff
+    } else if type_marker == 43 {
+        Type::BigTiff
+    } else {
+        return Err(
+            std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid TIFF header").into(),
+        );
+    };
+
+    if tiff_type == Type::BigTiff {
+        // http://bigtiff.org/ describes the BigTIFF header additions as constants 8 and 0.
+        let offset_bytesize = read_u16(reader, &endianness)?;
+        if offset_bytesize != 8 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Unrecognised BigTiff offset size",
+            )
+            .into());
+        }
+        let extra_field = read_u16(reader, &endianness)?;
+        if extra_field != 0 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid BigTiff header",
+            )
+            .into());
+        }
+    }
 
     //  Read the IFD offset from the header
-    reader.seek(SeekFrom::Start(4))?;
-    let ifd_offset = read_u32(reader, &endianness)?;
+    let ifd_offset = if tiff_type == Type::Tiff {
+        read_u32(reader, &endianness)? as u64
+    } else {
+        read_u64(reader, &endianness)?
+    };
 
     //  IFD offset cannot be 0
     if ifd_offset == 0 {
@@ -33,17 +72,26 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     }
 
     //  Jump to the IFD offset
-    reader.seek(SeekFrom::Start(ifd_offset.into()))?;
+    reader.seek(SeekFrom::Start(ifd_offset))?;
 
     //  Read how many IFD records there are
-    let ifd_count = read_u16(reader, &endianness)?;
+    let ifd_count = if tiff_type == Type::Tiff {
+        read_u16(reader, &endianness)? as u64
+    } else {
+        read_u64(reader, &endianness)?
+    };
+
     let mut width = None;
     let mut height = None;
 
     for _ifd in 0..ifd_count {
         let tag = read_u16(reader, &endianness)?;
         let kind = read_u16(reader, &endianness)?;
-        let _count = read_u32(reader, &endianness)?;
+        let _count = if tiff_type == Type::Tiff {
+            read_u32(reader, &endianness)? as u64
+        } else {
+            read_u64(reader, &endianness)?
+        };
 
         let value_bytes = match kind {
             // BYTE | ASCII | SBYTE | UNDEFINED
@@ -54,8 +102,19 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             4 | 9 | 11 | 13 => 4,
             // RATIONAL | SRATIONAL
             5 | 10 => 4 * 2,
-            // DOUBLE | LONG8 | SLONG8 | IFD8
-            12 | 16 | 17 | 18 => 8,
+            // DOUBLE
+            12 => 8,
+            // BigTiff only: LONG8 | SLONG8 | IFD8
+            16..=18 => {
+                if tiff_type == Type::Tiff {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        "Invalid IFD type for standard TIFF",
+                    )
+                    .into());
+                }
+                8
+            }
             // Anything else is invalid
             _ => {
                 return Err(std::io::Error::new(
@@ -66,8 +125,17 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             }
         };
 
-        let mut value_buffer = [0; 4];
-        reader.read_exact(&mut value_buffer)?;
+        let mut value_buffer = [0; 8];
+        let ifd_value_length = if tiff_type == Type::Tiff { 4 } else { 8 };
+        let mut handle = reader.take(ifd_value_length);
+        let bytes_loaded = handle.read(&mut value_buffer)?;
+        if bytes_loaded != ifd_value_length as usize {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid IFD value length",
+            )
+            .into());
+        }
 
         let mut r = Cursor::new(&value_buffer[..]);
         let value = match value_bytes {
@@ -97,5 +165,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 }
 
 pub fn matches(header: &[u8]) -> bool {
-    header.starts_with(b"II\x2A\x00") || header.starts_with(b"MM\x00\x2A")
+    const TYPE_MARKERS: [u8; 2] = [b'\x2A', b'\x2B'];
+    (header.starts_with(b"II") && TYPE_MARKERS.contains(&header[2]) && header[3] == 0)
+        || (header.starts_with(b"MM\x00") && TYPE_MARKERS.contains(&header[3]))
 }

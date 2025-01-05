@@ -7,6 +7,16 @@ pub enum Endian {
     Big,
 }
 
+pub fn read_u64<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> ImageResult<u64> {
+    let mut buf = [0; 8];
+    reader.read_exact(&mut buf)?;
+
+    match endianness {
+        Endian::Little => Ok(u64::from_le_bytes(buf)),
+        Endian::Big => Ok(u64::from_be_bytes(buf)),
+    }
+}
+
 pub fn read_i32<R: BufRead + Seek>(reader: &mut R, endianness: &Endian) -> ImageResult<i32> {
     let mut attr_size_buf = [0; 4];
     reader.read_exact(&mut attr_size_buf)?;

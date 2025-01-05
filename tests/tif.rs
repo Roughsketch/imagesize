@@ -26,3 +26,16 @@ fn tiff_test_16bit_size() {
         }
     );
 }
+
+#[test]
+#[cfg(feature = "tiff")]
+fn tiff_test_bigtiff() {
+    let dim = size("tests/images/tif/test_bif.tif").unwrap();
+    assert_eq!(
+        dim,
+        ImageSize {
+            width: 1,
+            height: 1,
+        }
+    );
+}
