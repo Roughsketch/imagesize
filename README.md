@@ -9,7 +9,7 @@ The goal of this crate is to be able to read the dimensions of a supported image
 Add the following to your Cargo.toml:
 ```toml
 [dependencies]
-imagesize = "0.13"
+imagesize = "0.14"
 ```
 
 ## Supported Image Formats
