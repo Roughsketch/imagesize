@@ -56,12 +56,21 @@ pub enum ImageType {
     /// <https://github.com/aseprite/aseprite>
     #[cfg(feature = "aesprite")]
     Aseprite,
+    /// Adaptive Scalable Texture Compression
+    #[cfg(feature = "astc")]
+    Astc,
     /// Standard Bitmap
     #[cfg(feature = "bmp")]
     Bmp,
     /// DirectDraw Surface
     #[cfg(feature = "dds")]
     Dds,
+    /// Ericsson Texture Compression - Alpha Channel
+    #[cfg(feature = "eac")]
+    Eac,
+    /// Ericsson Texture Compression 2
+    #[cfg(feature = "etc2")]
+    Etc2,
     /// OpenEXR
     #[cfg(feature = "exr")]
     Exr,
@@ -99,6 +108,9 @@ pub enum ImageType {
     /// Portable Any Map
     #[cfg(feature = "pnm")]
     Pnm,
+    /// PowerVR Texture Compression
+    #[cfg(feature = "pvrtc")]
+    Pvrtc,
     /// Photoshop Document
     #[cfg(feature = "psd")]
     Psd,
@@ -129,10 +141,16 @@ impl ImageType {
         match self {
             #[cfg(feature = "aesprite")]
             ImageType::Aseprite => aesprite::size(reader),
+            #[cfg(feature = "astc")]
+            ImageType::Astc => astc::size(reader),
             #[cfg(feature = "bmp")]
             ImageType::Bmp => bmp::size(reader),
             #[cfg(feature = "dds")]
             ImageType::Dds => dds::size(reader),
+            #[cfg(feature = "eac")]
+            ImageType::Eac => eac::size(reader),
+            #[cfg(feature = "etc2")]
+            ImageType::Etc2 => etc2::size(reader),
             #[cfg(feature = "exr")]
             ImageType::Exr => exr::size(reader),
             #[cfg(feature = "farbfeld")]
@@ -155,6 +173,8 @@ impl ImageType {
             ImageType::Png => png::size(reader),
             #[cfg(feature = "pnm")]
             ImageType::Pnm => pnm::size(reader),
+            #[cfg(feature = "pvrtc")]
+            ImageType::Pvrtc => pvrtc::size(reader),
             #[cfg(feature = "psd")]
             ImageType::Psd => psd::size(reader),
             #[cfg(feature = "qoi")]

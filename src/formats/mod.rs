@@ -1,9 +1,15 @@
 #[cfg(feature = "aesprite")]
 pub mod aesprite;
+#[cfg(feature = "astc")]
+pub mod astc;
 #[cfg(feature = "bmp")]
 pub mod bmp;
 #[cfg(feature = "dds")]
 pub mod dds;
+#[cfg(feature = "eac")]
+pub mod eac;
+#[cfg(feature = "etc2")]
+pub mod etc2;
 #[cfg(feature = "exr")]
 pub mod exr;
 #[cfg(feature = "farbfeld")]
@@ -28,6 +34,8 @@ pub mod png;
 pub mod pnm;
 #[cfg(feature = "psd")]
 pub mod psd;
+#[cfg(feature = "pvrtc")]
+pub mod pvrtc;
 #[cfg(feature = "qoi")]
 pub mod qoi;
 #[cfg(feature = "tga")]
@@ -108,6 +116,27 @@ pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
     #[cfg(feature = "aesprite")]
     if aesprite::matches(&header) {
         return Ok(ImageType::Aseprite);
+    }
+
+    #[cfg(feature = "astc")]
+    if astc::matches(&header) {
+        return Ok(ImageType::Astc);
+    }
+
+    #[cfg(feature = "pvrtc")]
+    if pvrtc::matches(&header) {
+        return Ok(ImageType::Pvrtc);
+    }
+
+    // Check EAC before ETC2 since EAC is more specific
+    #[cfg(feature = "eac")]
+    if eac::matches(&header) {
+        return Ok(ImageType::Eac);
+    }
+
+    #[cfg(feature = "etc2")]
+    if etc2::matches(&header) {
+        return Ok(ImageType::Etc2);
     }
 
     #[cfg(feature = "exr")]

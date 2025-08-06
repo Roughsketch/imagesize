@@ -41,7 +41,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
             if box_size != 0 && box_size < box_header_size {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
-                    format!("Invalid size for {} box: {}", box_type, box_size),
+                    format!("Invalid size for {box_type} box: {box_size}"),
                 )
                 .into());
             }

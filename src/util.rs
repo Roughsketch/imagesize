@@ -102,7 +102,7 @@ pub fn read_until_capped<R: BufRead>(
     if amount_read >= max_size {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
-            format!("Delimiter not found within {} bytes", max_size),
+            format!("Delimiter not found within {max_size} bytes"),
         ));
     }
 
@@ -140,7 +140,7 @@ pub fn read_until_whitespace<R: BufRead>(reader: &mut R, max_size: usize) -> io:
     if amount_read >= max_size {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
-            format!("Delimiter not found within {} bytes", max_size),
+            format!("Delimiter not found within {max_size} bytes"),
         ));
     }
 

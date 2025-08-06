@@ -189,7 +189,7 @@ fn skip_to_tag<R: BufRead + Seek>(reader: &mut R, tag: &[u8]) -> ImageResult<u32
         } else {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
-                format!("Invalid heif box size: {}", size),
+                format!("Invalid heif box size: {size}"),
             )
             .into());
         }
