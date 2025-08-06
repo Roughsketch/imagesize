@@ -8,7 +8,7 @@ fn ktx2_test() {
     assert_eq!(
         dim,
         ImageSize {
-            width: 1,
+            width: 256,
             height: 256
         }
     );

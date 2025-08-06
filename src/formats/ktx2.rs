@@ -6,7 +6,7 @@ use crate::{
 };
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
-    reader.seek(SeekFrom::Start(16))?;
+    reader.seek(SeekFrom::Start(20))?;
 
     let width = read_u32(reader, &Endian::Little)? as usize;
     let height = read_u32(reader, &Endian::Little)? as usize;
