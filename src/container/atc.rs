@@ -46,8 +46,8 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     {
         // Check for ATC-specific data types
         let data_type = u16::from_be_bytes([pkm_header[6], pkm_header[7]]);
-        if matches!(data_type, 0x8C92 | 0x8C93) {
-            // ATC_RGB and ATC_RGBA_EXPLICIT_ALPHA
+        if matches!(data_type, 0x8C92 | 0x8C93 | 0x87EE) {
+            // ATC_RGB, ATC_RGBA_EXPLICIT_ALPHA, and ATC_RGBA_INTERPOLATED_ALPHA
             reader.seek(SeekFrom::Start(8))?; // Skip magic + version + data type
             let _extended_width = read_u16(reader, &Endian::Big)?;
             let _extended_height = read_u16(reader, &Endian::Big)?;

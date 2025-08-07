@@ -34,30 +34,39 @@ pub enum PvrtcCompression {
 }
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
-    // PVRTC (PowerVR Texture Compression) format supports:
-    // - PVRTCI-2bpp: 2 bits per pixel compression
-    // - PVRTCI-4bpp: 4 bits per pixel compression
-    // Both RGB and RGBA variants are supported
-    // PVRTC header structure:
-    // Header size: 4 bytes (little-endian)
-    // Height: 4 bytes (little-endian)
-    // Width: 4 bytes (little-endian)
-    // Mipmap count: 4 bytes (little-endian)
-    // Flags: 4 bytes (little-endian)
-    // Data length: 4 bytes (little-endian)
-    // Bits per pixel: 4 bytes (little-endian) - indicates 2bpp or 4bpp
-    // Red mask: 4 bytes (little-endian)
-    // Green mask: 4 bytes (little-endian)
-    // Blue mask: 4 bytes (little-endian)
-    // Alpha mask: 4 bytes (little-endian)
-    // PVR magic: 4 bytes (little-endian) - should be "PVR!"
-    // Surface count: 4 bytes (little-endian)
+    // Check if this is PVR v3 format or legacy format
+    reader.seek(SeekFrom::Start(0))?;
+    let mut magic = [0u8; 4];
+    reader.read_exact(&mut magic)?;
 
-    reader.seek(SeekFrom::Start(4))?; // Skip header size
-    let height = read_u32(reader, &Endian::Little)? as usize;
-    let width = read_u32(reader, &Endian::Little)? as usize;
+    if &magic == b"PVR\x03" {
+        // PVR v3 format structure:
+        // 0-3: Magic "PVR\x03"
+        // 4-7: Flags
+        // 8-15: Pixel format (8 bytes)
+        // 16-19: Colour space
+        // 20-23: Channel type
+        // 24-27: Height
+        // 28-31: Width
+        // 32-35: Depth
+        // ... rest of header
+        reader.seek(SeekFrom::Start(24))?;
+        let height = read_u32(reader, &Endian::Little)? as usize;
+        let width = read_u32(reader, &Endian::Little)? as usize;
 
-    Ok(ImageSize { width, height })
+        Ok(ImageSize { width, height })
+    } else {
+        // Legacy PVR format structure:
+        // Header size: 4 bytes (little-endian)
+        // Height: 4 bytes (little-endian)
+        // Width: 4 bytes (little-endian)
+        // ... rest of legacy header
+        reader.seek(SeekFrom::Start(4))?;
+        let height = read_u32(reader, &Endian::Little)? as usize;
+        let width = read_u32(reader, &Endian::Little)? as usize;
+
+        Ok(ImageSize { width, height })
+    }
 }
 
 pub fn matches(header: &[u8]) -> bool {
@@ -89,26 +98,34 @@ pub fn matches(header: &[u8]) -> bool {
 }
 
 pub fn detect_compression<R: BufRead + Seek>(reader: &mut R) -> ImageResult<PvrtcCompression> {
-    // Read the pixel format to determine compression
-    // PVR v3 format layout:
-    // 0-3: Magic "PVR\x03"
-    // 4-7: Flags
-    // 8-15: Pixel format (8 bytes)
-    reader.seek(SeekFrom::Start(8))?; // Skip to pixel format field
-    let pixel_format = read_u64(reader, &Endian::Little)?;
+    // Check if this is PVR v3 format or legacy format
+    reader.seek(SeekFrom::Start(0))?;
+    let mut magic = [0u8; 4];
+    reader.read_exact(&mut magic)?;
 
-    let compression = match pixel_format {
-        0 => PvrtcCompression::Pvrtc2BppRgb,  // PVRTCI_2BPP_RGB
-        1 => PvrtcCompression::Pvrtc2BppRgba, // PVRTCI_2BPP_RGBA
-        2 => PvrtcCompression::Pvrtc4BppRgb,  // PVRTCI_4BPP_RGB
-        3 => PvrtcCompression::Pvrtc4BppRgba, // PVRTCI_4BPP_RGBA
-        22 => PvrtcCompression::Etc2Rgb,      // ETC2_RGB
-        23 => PvrtcCompression::Etc2Rgba,     // ETC2_RGBA
-        24 => PvrtcCompression::Etc2RgbA1,    // ETC2_RGB_A1
-        25 => PvrtcCompression::EacR11,       // EAC_R11
-        26 => PvrtcCompression::EacRg11,      // EAC_RG11
-        _ => PvrtcCompression::Unknown,
-    };
+    if &magic == b"PVR\x03" {
+        // PVR v3 format - read pixel format from offset 8-15
+        reader.seek(SeekFrom::Start(8))?;
+        let pixel_format = read_u64(reader, &Endian::Little)?;
 
-    Ok(compression)
+        let compression = match pixel_format {
+            0 => PvrtcCompression::Pvrtc2BppRgb,  // PVRTCI_2BPP_RGB
+            1 => PvrtcCompression::Pvrtc2BppRgba, // PVRTCI_2BPP_RGBA
+            2 => PvrtcCompression::Pvrtc4BppRgb,  // PVRTCI_4BPP_RGB
+            3 => PvrtcCompression::Pvrtc4BppRgba, // PVRTCI_4BPP_RGBA
+            22 => PvrtcCompression::Etc2Rgb,      // ETC2_RGB
+            23 => PvrtcCompression::Etc2Rgba,     // ETC2_RGBA
+            24 => PvrtcCompression::Etc2RgbA1,    // ETC2_RGB_A1
+            25 => PvrtcCompression::EacR11,       // EAC_R11
+            26 => PvrtcCompression::EacRg11,      // EAC_RG11
+            _ => PvrtcCompression::Unknown,
+        };
+
+        Ok(compression)
+    } else {
+        // Legacy format - try to determine compression from other header fields
+        // For legacy format, we don't have the same pixel format field,
+        // so we'll need to infer from other data or default to Unknown
+        Ok(PvrtcCompression::Unknown)
+    }
 }
