@@ -8,7 +8,7 @@ fn pvrtc_format_detection() {
     let data = fs::read("tests/images/pvrtc/64x64.pvr").expect("Failed to read PVRTC test file");
 
     match image_type(&data) {
-        Ok(ImageType::Pvrtc) => (),
+        Ok(ImageType::Pvrtc(_)) => (),
         _ => panic!("PVRTC format not detected correctly"),
     }
 }

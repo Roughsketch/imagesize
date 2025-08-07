@@ -8,7 +8,7 @@ fn eac_format_detection() {
     let data = fs::read("tests/images/eac/64x64_r11.pkm").expect("Failed to read EAC test file");
 
     match image_type(&data) {
-        Ok(ImageType::Eac) => (),
+        Ok(ImageType::Eac(_)) => (),
         _ => panic!("EAC format not detected correctly"),
     }
 }

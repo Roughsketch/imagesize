@@ -10,7 +10,30 @@ mod container;
 mod formats;
 mod util;
 
-pub use container::heif::Compression;
+pub use container::{
+    atc::AtcCompression, dds::DdsCompression, heif::Compression, pkm::PkmCompression,
+    pvrtc::PvrtcCompression,
+};
+
+/// Groups related compression algorithms regardless of their container format
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum CompressionFamily {
+    /// Block Compression family (BC1-7, also known as DXT1-5, ATI1-2)
+    BlockCompression,
+    /// Ericsson Texture Compression family (ETC1, ETC2 variants)
+    Etc,
+    /// Ericsson Alpha Compression (EAC R11, RG11)
+    Eac,
+    /// PowerVR Texture Compression
+    Pvrtc,
+    /// Adaptive Scalable Texture Compression
+    Astc,
+    /// Adaptive Texture Compression (Qualcomm Adreno)
+    Atc,
+    /// Uncompressed formats
+    Uncompressed,
+}
+
 use {
     container::heif::{self},
     formats::*,
@@ -49,6 +72,74 @@ impl From<std::io::Error> for ImageError {
 pub type ImageResult<T> = Result<T, ImageError>;
 
 /// Types of image formats that this crate can identify.
+///
+/// Many container formats support multiple inner compression formats. For these formats,
+/// the enum contains the inner compression type to provide more detailed information:
+///
+/// - `Dds(DdsCompression)` - DirectDraw Surface with various BC compression formats
+/// - `Etc2(PkmCompression)` - ETC/PKM container with ETC1, ETC2, EAC variants
+/// - `Eac(PkmCompression)` - EAC formats (unified with ETC2 detection)
+/// - `Atc(AtcCompression)` - Adaptive Texture Compression variants
+/// - `Pvrtc(PvrtcCompression)` - PowerVR texture compression with 2bpp/4bpp variants
+///
+/// # Helper Methods
+///
+/// The `ImageType` provides several helper methods to query compression information 
+/// across different container formats:
+///
+/// - [`compression_family()`](ImageType::compression_family) - Groups related compression algorithms
+/// - [`is_block_compressed()`](ImageType::is_block_compressed) - Checks for BC/DXT compression
+/// - [`container_format()`](ImageType::container_format) - Returns container format name
+/// - [`is_multi_compression_container()`](ImageType::is_multi_compression_container) - Checks if container supports multiple compression types
+///
+/// # Examples
+///
+/// ## Basic Format Detection
+///
+/// ```rust
+/// use imagesize::{image_type, ImageType, PkmCompression};
+///
+/// // Create a PKM header for ETC2 format
+/// let mut header = vec![b'P', b'K', b'M', b' ', b'2', b'0'];
+/// header.extend_from_slice(&0x0001u16.to_be_bytes()); // ETC2 RGB
+/// header.extend_from_slice(&[0x00, 0x40, 0x00, 0x40]); // Extended dimensions
+/// header.extend_from_slice(&[0x00, 0x40, 0x00, 0x40]); // Original dimensions
+///
+/// match image_type(&header).unwrap() {
+///     ImageType::Etc2(PkmCompression::Etc2) => println!("This is ETC2 RGB format"),
+///     ImageType::Etc2(compression) => println!("This is ETC2 format: {:?}", compression),
+///     other => println!("Other format: {:?}", other),
+/// }
+/// ```
+///
+/// ## Using Helper Methods for Cross-Container Queries
+///
+/// ```rust
+/// use imagesize::{ImageType, CompressionFamily, DdsCompression, PvrtcCompression};
+///
+/// // Query compression families across different containers
+/// let dds_bc1 = ImageType::Dds(DdsCompression::Bc1);
+/// let pvr_etc2 = ImageType::Pvrtc(PvrtcCompression::Etc2Rgb);
+/// let png = ImageType::Png;
+///
+/// // Group related compression algorithms
+/// assert_eq!(dds_bc1.compression_family(), Some(CompressionFamily::BlockCompression));
+/// assert_eq!(pvr_etc2.compression_family(), Some(CompressionFamily::Etc));
+/// assert_eq!(png.compression_family(), None); // Simple formats don't have compression
+///
+/// // Check for specific compression types
+/// assert!(dds_bc1.is_block_compressed());
+/// assert!(!pvr_etc2.is_block_compressed());
+///
+/// // Identify container formats
+/// assert_eq!(dds_bc1.container_format(), Some("DDS"));
+/// assert_eq!(pvr_etc2.container_format(), Some("PowerVR"));
+/// assert_eq!(png.container_format(), None);
+///
+/// // Check multi-compression support
+/// assert!(dds_bc1.is_multi_compression_container()); // DDS supports BC1-7, RGBA, etc.
+/// assert!(pvr_etc2.is_multi_compression_container()); // PowerVR supports PVRTC, ETC2, EAC
+/// ```
 #[non_exhaustive]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageType {
@@ -59,18 +150,21 @@ pub enum ImageType {
     /// Adaptive Scalable Texture Compression
     #[cfg(feature = "astc")]
     Astc,
+    /// Adaptive Texture Compression
+    #[cfg(feature = "atc")]
+    Atc(AtcCompression),
     /// Standard Bitmap
     #[cfg(feature = "bmp")]
     Bmp,
     /// DirectDraw Surface
     #[cfg(feature = "dds")]
-    Dds,
-    /// Ericsson Texture Compression - Alpha Channel
+    Dds(DdsCompression),
+    /// Ericsson Texture Compression - Alpha Channel (now unified with ETC2)
     #[cfg(feature = "eac")]
-    Eac,
-    /// Ericsson Texture Compression 2
+    Eac(PkmCompression),
+    /// Ericsson Texture Compression 2 (includes ETC1, ETC2 variants)
     #[cfg(feature = "etc2")]
-    Etc2,
+    Etc2(PkmCompression),
     /// OpenEXR
     #[cfg(feature = "exr")]
     Exr,
@@ -110,7 +204,7 @@ pub enum ImageType {
     Pnm,
     /// PowerVR Texture Compression
     #[cfg(feature = "pvrtc")]
-    Pvrtc,
+    Pvrtc(PvrtcCompression),
     /// Photoshop Document
     #[cfg(feature = "psd")]
     Psd,
@@ -133,6 +227,178 @@ pub enum ImageType {
 }
 
 impl ImageType {
+    /// Returns the compression family for texture formats
+    ///
+    /// Groups related compression algorithms regardless of their container format.
+    /// Returns None for simple image formats like PNG, JPEG, etc.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use imagesize::{ImageType, CompressionFamily, DdsCompression, PvrtcCompression};
+    ///
+    /// let dds_type = ImageType::Dds(DdsCompression::Bc1);
+    /// assert_eq!(dds_type.compression_family(), Some(CompressionFamily::BlockCompression));
+    ///
+    /// let pvrtc_etc2_type = ImageType::Pvrtc(PvrtcCompression::Etc2Rgb);
+    /// assert_eq!(pvrtc_etc2_type.compression_family(), Some(CompressionFamily::Etc));
+    ///
+    /// let png_type = ImageType::Png;
+    /// assert_eq!(png_type.compression_family(), None);
+    /// ```
+    pub fn compression_family(&self) -> Option<CompressionFamily> {
+        match self {
+            #[cfg(feature = "dds")]
+            ImageType::Dds(compression) => match compression {
+                DdsCompression::Bc1 | DdsCompression::Bc2 | DdsCompression::Bc3 |
+                DdsCompression::Bc4 | DdsCompression::Bc5 | DdsCompression::Bc6h |
+                DdsCompression::Bc7 => Some(CompressionFamily::BlockCompression),
+                DdsCompression::Rgba32 | DdsCompression::Rgb24 => Some(CompressionFamily::Uncompressed),
+                DdsCompression::Unknown => None,
+            },
+            
+            #[cfg(feature = "etc2")]
+            ImageType::Etc2(compression) => match compression {
+                PkmCompression::Etc1 | PkmCompression::Etc2 | PkmCompression::Etc2A1 |
+                PkmCompression::Etc2A8 => Some(CompressionFamily::Etc),
+                PkmCompression::EacR | PkmCompression::EacRg | PkmCompression::EacRSigned |
+                PkmCompression::EacRgSigned => Some(CompressionFamily::Eac),
+                PkmCompression::Unknown => None,
+            },
+            
+            #[cfg(feature = "eac")]
+            ImageType::Eac(compression) => match compression {
+                PkmCompression::EacR | PkmCompression::EacRg | PkmCompression::EacRSigned |
+                PkmCompression::EacRgSigned => Some(CompressionFamily::Eac),
+                PkmCompression::Etc1 | PkmCompression::Etc2 | PkmCompression::Etc2A1 |
+                PkmCompression::Etc2A8 => Some(CompressionFamily::Etc),
+                PkmCompression::Unknown => None,
+            },
+            
+            #[cfg(feature = "pvrtc")]
+            ImageType::Pvrtc(compression) => match compression {
+                PvrtcCompression::Pvrtc2BppRgb | PvrtcCompression::Pvrtc2BppRgba |
+                PvrtcCompression::Pvrtc4BppRgb | PvrtcCompression::Pvrtc4BppRgba => 
+                    Some(CompressionFamily::Pvrtc),
+                PvrtcCompression::Etc2Rgb | PvrtcCompression::Etc2Rgba | 
+                PvrtcCompression::Etc2RgbA1 => Some(CompressionFamily::Etc),
+                PvrtcCompression::EacR11 | PvrtcCompression::EacRg11 => Some(CompressionFamily::Eac),
+                PvrtcCompression::Unknown => None,
+            },
+            
+            #[cfg(feature = "atc")]
+            ImageType::Atc(_) => Some(CompressionFamily::Atc),
+            
+            #[cfg(feature = "astc")]
+            ImageType::Astc => Some(CompressionFamily::Astc),
+            
+            // Simple formats don't have compression families
+            _ => None,
+        }
+    }
+
+    /// Returns true if the image uses block compression (BC/DXT family)
+    ///
+    /// Block compression includes BC1-7 formats (also known as DXT1-5, ATI1-2).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use imagesize::{ImageType, DdsCompression};
+    ///
+    /// let bc1_type = ImageType::Dds(DdsCompression::Bc1);
+    /// assert!(bc1_type.is_block_compressed());
+    ///
+    /// let png_type = ImageType::Png;
+    /// assert!(!png_type.is_block_compressed());
+    /// ```
+    pub fn is_block_compressed(&self) -> bool {
+        matches!(self.compression_family(), Some(CompressionFamily::BlockCompression))
+    }
+
+    /// Returns the container format name for texture formats
+    ///
+    /// Returns a human-readable string identifying the container format.
+    /// Returns None for simple image formats.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use imagesize::{ImageType, DdsCompression, PvrtcCompression};
+    ///
+    /// let dds_type = ImageType::Dds(DdsCompression::Bc1);
+    /// assert_eq!(dds_type.container_format(), Some("DDS"));
+    ///
+    /// let pvr_type = ImageType::Pvrtc(PvrtcCompression::Pvrtc2BppRgb);
+    /// assert_eq!(pvr_type.container_format(), Some("PowerVR"));
+    ///
+    /// let png_type = ImageType::Png;
+    /// assert_eq!(png_type.container_format(), None);
+    /// ```
+    pub fn container_format(&self) -> Option<&'static str> {
+        match self {
+            #[cfg(feature = "dds")]
+            ImageType::Dds(_) => Some("DDS"),
+            
+            #[cfg(feature = "etc2")]
+            ImageType::Etc2(_) => Some("PKM"),
+            
+            #[cfg(feature = "eac")]
+            ImageType::Eac(_) => Some("PKM"),
+            
+            #[cfg(feature = "pvrtc")]
+            ImageType::Pvrtc(_) => Some("PowerVR"),
+            
+            #[cfg(feature = "atc")]
+            ImageType::Atc(_) => Some("PKM"),  // ATC typically uses PKM containers
+            
+            #[cfg(feature = "astc")]
+            ImageType::Astc => Some("ASTC"),   // Direct ASTC format
+            
+            #[cfg(feature = "heif")]
+            ImageType::Heif(_) => Some("HEIF"),
+            
+            #[cfg(feature = "ktx2")]
+            ImageType::Ktx2 => Some("KTX2"),
+            
+            // Simple formats don't have containers
+            _ => None,
+        }
+    }
+
+    /// Returns true if the image format supports multiple compression types within the same container
+    ///
+    /// Some container formats like PowerVR can store different compression algorithms.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use imagesize::{ImageType, PvrtcCompression, DdsCompression};
+    ///
+    /// let pvr_type = ImageType::Pvrtc(PvrtcCompression::Etc2Rgb);
+    /// assert!(pvr_type.is_multi_compression_container());
+    ///
+    /// let dds_type = ImageType::Dds(DdsCompression::Bc1);
+    /// assert!(dds_type.is_multi_compression_container());
+    ///
+    /// let png_type = ImageType::Png;
+    /// assert!(!png_type.is_multi_compression_container());
+    /// ```
+    pub fn is_multi_compression_container(&self) -> bool {
+        match self {
+            #[cfg(feature = "dds")]
+            ImageType::Dds(_) => true,        // DDS supports BC1-7, RGBA, etc.
+            
+            #[cfg(feature = "pvrtc")]
+            ImageType::Pvrtc(_) => true,      // PowerVR supports PVRTC, ETC2, EAC
+            
+            #[cfg(feature = "ktx2")]
+            ImageType::Ktx2 => true,          // KTX2 supports many formats
+            
+            _ => false,
+        }
+    }
+
     /// Calls the correct image size method based on the image type
     ///
     /// # Arguments
@@ -143,14 +409,16 @@ impl ImageType {
             ImageType::Aseprite => aesprite::size(reader),
             #[cfg(feature = "astc")]
             ImageType::Astc => astc::size(reader),
+            #[cfg(feature = "atc")]
+            ImageType::Atc(..) => container::atc::size(reader),
             #[cfg(feature = "bmp")]
             ImageType::Bmp => bmp::size(reader),
             #[cfg(feature = "dds")]
-            ImageType::Dds => dds::size(reader),
+            ImageType::Dds(..) => container::dds::size(reader),
             #[cfg(feature = "eac")]
-            ImageType::Eac => eac::size(reader),
+            ImageType::Eac(..) => container::pkm::size(reader),
             #[cfg(feature = "etc2")]
-            ImageType::Etc2 => etc2::size(reader),
+            ImageType::Etc2(..) => container::pkm::size(reader),
             #[cfg(feature = "exr")]
             ImageType::Exr => exr::size(reader),
             #[cfg(feature = "farbfeld")]
@@ -174,7 +442,7 @@ impl ImageType {
             #[cfg(feature = "pnm")]
             ImageType::Pnm => pnm::size(reader),
             #[cfg(feature = "pvrtc")]
-            ImageType::Pvrtc => pvrtc::size(reader),
+            ImageType::Pvrtc(..) => container::pvrtc::size(reader),
             #[cfg(feature = "psd")]
             ImageType::Psd => psd::size(reader),
             #[cfg(feature = "qoi")]

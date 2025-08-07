@@ -8,7 +8,7 @@ fn etc2_format_detection() {
     let data = fs::read("tests/images/etc2/64x64_rgb.pkm").expect("Failed to read ETC2 test file");
 
     match image_type(&data) {
-        Ok(ImageType::Etc2) => (),
+        Ok(ImageType::Etc2(_)) => (),
         _ => panic!("ETC2 format not detected correctly"),
     }
 }
