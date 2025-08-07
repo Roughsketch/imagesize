@@ -84,7 +84,7 @@ pub type ImageResult<T> = Result<T, ImageError>;
 ///
 /// # Helper Methods
 ///
-/// The `ImageType` provides several helper methods to query compression information 
+/// The `ImageType` provides several helper methods to query compression information
 /// across different container formats:
 ///
 /// - [`compression_family()`](ImageType::compression_family) - Groups related compression algorithms
@@ -250,48 +250,66 @@ impl ImageType {
         match self {
             #[cfg(feature = "dds")]
             ImageType::Dds(compression) => match compression {
-                DdsCompression::Bc1 | DdsCompression::Bc2 | DdsCompression::Bc3 |
-                DdsCompression::Bc4 | DdsCompression::Bc5 | DdsCompression::Bc6h |
-                DdsCompression::Bc7 => Some(CompressionFamily::BlockCompression),
-                DdsCompression::Rgba32 | DdsCompression::Rgb24 => Some(CompressionFamily::Uncompressed),
+                DdsCompression::Bc1
+                | DdsCompression::Bc2
+                | DdsCompression::Bc3
+                | DdsCompression::Bc4
+                | DdsCompression::Bc5
+                | DdsCompression::Bc6h
+                | DdsCompression::Bc7 => Some(CompressionFamily::BlockCompression),
+                DdsCompression::Rgba32 | DdsCompression::Rgb24 => {
+                    Some(CompressionFamily::Uncompressed)
+                }
                 DdsCompression::Unknown => None,
             },
-            
+
             #[cfg(feature = "etc2")]
             ImageType::Etc2(compression) => match compression {
-                PkmCompression::Etc1 | PkmCompression::Etc2 | PkmCompression::Etc2A1 |
-                PkmCompression::Etc2A8 => Some(CompressionFamily::Etc),
-                PkmCompression::EacR | PkmCompression::EacRg | PkmCompression::EacRSigned |
-                PkmCompression::EacRgSigned => Some(CompressionFamily::Eac),
+                PkmCompression::Etc1
+                | PkmCompression::Etc2
+                | PkmCompression::Etc2A1
+                | PkmCompression::Etc2A8 => Some(CompressionFamily::Etc),
+                PkmCompression::EacR
+                | PkmCompression::EacRg
+                | PkmCompression::EacRSigned
+                | PkmCompression::EacRgSigned => Some(CompressionFamily::Eac),
                 PkmCompression::Unknown => None,
             },
-            
+
             #[cfg(feature = "eac")]
             ImageType::Eac(compression) => match compression {
-                PkmCompression::EacR | PkmCompression::EacRg | PkmCompression::EacRSigned |
-                PkmCompression::EacRgSigned => Some(CompressionFamily::Eac),
-                PkmCompression::Etc1 | PkmCompression::Etc2 | PkmCompression::Etc2A1 |
-                PkmCompression::Etc2A8 => Some(CompressionFamily::Etc),
+                PkmCompression::EacR
+                | PkmCompression::EacRg
+                | PkmCompression::EacRSigned
+                | PkmCompression::EacRgSigned => Some(CompressionFamily::Eac),
+                PkmCompression::Etc1
+                | PkmCompression::Etc2
+                | PkmCompression::Etc2A1
+                | PkmCompression::Etc2A8 => Some(CompressionFamily::Etc),
                 PkmCompression::Unknown => None,
             },
-            
+
             #[cfg(feature = "pvrtc")]
             ImageType::Pvrtc(compression) => match compression {
-                PvrtcCompression::Pvrtc2BppRgb | PvrtcCompression::Pvrtc2BppRgba |
-                PvrtcCompression::Pvrtc4BppRgb | PvrtcCompression::Pvrtc4BppRgba => 
-                    Some(CompressionFamily::Pvrtc),
-                PvrtcCompression::Etc2Rgb | PvrtcCompression::Etc2Rgba | 
-                PvrtcCompression::Etc2RgbA1 => Some(CompressionFamily::Etc),
-                PvrtcCompression::EacR11 | PvrtcCompression::EacRg11 => Some(CompressionFamily::Eac),
+                PvrtcCompression::Pvrtc2BppRgb
+                | PvrtcCompression::Pvrtc2BppRgba
+                | PvrtcCompression::Pvrtc4BppRgb
+                | PvrtcCompression::Pvrtc4BppRgba => Some(CompressionFamily::Pvrtc),
+                PvrtcCompression::Etc2Rgb
+                | PvrtcCompression::Etc2Rgba
+                | PvrtcCompression::Etc2RgbA1 => Some(CompressionFamily::Etc),
+                PvrtcCompression::EacR11 | PvrtcCompression::EacRg11 => {
+                    Some(CompressionFamily::Eac)
+                }
                 PvrtcCompression::Unknown => None,
             },
-            
+
             #[cfg(feature = "atc")]
             ImageType::Atc(_) => Some(CompressionFamily::Atc),
-            
+
             #[cfg(feature = "astc")]
             ImageType::Astc => Some(CompressionFamily::Astc),
-            
+
             // Simple formats don't have compression families
             _ => None,
         }
@@ -313,7 +331,10 @@ impl ImageType {
     /// assert!(!png_type.is_block_compressed());
     /// ```
     pub fn is_block_compressed(&self) -> bool {
-        matches!(self.compression_family(), Some(CompressionFamily::BlockCompression))
+        matches!(
+            self.compression_family(),
+            Some(CompressionFamily::BlockCompression)
+        )
     }
 
     /// Returns the container format name for texture formats
@@ -339,28 +360,28 @@ impl ImageType {
         match self {
             #[cfg(feature = "dds")]
             ImageType::Dds(_) => Some("DDS"),
-            
+
             #[cfg(feature = "etc2")]
             ImageType::Etc2(_) => Some("PKM"),
-            
+
             #[cfg(feature = "eac")]
             ImageType::Eac(_) => Some("PKM"),
-            
+
             #[cfg(feature = "pvrtc")]
             ImageType::Pvrtc(_) => Some("PowerVR"),
-            
+
             #[cfg(feature = "atc")]
-            ImageType::Atc(_) => Some("PKM"),  // ATC typically uses PKM containers
-            
+            ImageType::Atc(_) => Some("PKM"), // ATC typically uses PKM containers
+
             #[cfg(feature = "astc")]
-            ImageType::Astc => Some("ASTC"),   // Direct ASTC format
-            
+            ImageType::Astc => Some("ASTC"), // Direct ASTC format
+
             #[cfg(feature = "heif")]
             ImageType::Heif(_) => Some("HEIF"),
-            
+
             #[cfg(feature = "ktx2")]
             ImageType::Ktx2 => Some("KTX2"),
-            
+
             // Simple formats don't have containers
             _ => None,
         }
@@ -387,14 +408,14 @@ impl ImageType {
     pub fn is_multi_compression_container(&self) -> bool {
         match self {
             #[cfg(feature = "dds")]
-            ImageType::Dds(_) => true,        // DDS supports BC1-7, RGBA, etc.
-            
+            ImageType::Dds(_) => true, // DDS supports BC1-7, RGBA, etc.
+
             #[cfg(feature = "pvrtc")]
-            ImageType::Pvrtc(_) => true,      // PowerVR supports PVRTC, ETC2, EAC
-            
+            ImageType::Pvrtc(_) => true, // PowerVR supports PVRTC, ETC2, EAC
+
             #[cfg(feature = "ktx2")]
-            ImageType::Ktx2 => true,          // KTX2 supports many formats
-            
+            ImageType::Ktx2 => true, // KTX2 supports many formats
+
             _ => false,
         }
     }

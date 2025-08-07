@@ -80,7 +80,7 @@ pub fn detect_compression<R: BufRead + Seek>(reader: &mut R) -> ImageResult<DdsC
             let dxgi_format = read_u32(reader, &Endian::Little)?;
             match dxgi_format {
                 95 => DdsCompression::Bc6h, // DXGI_FORMAT_BC6H_UF16
-                96 => DdsCompression::Bc6h, // DXGI_FORMAT_BC6H_SF16  
+                96 => DdsCompression::Bc6h, // DXGI_FORMAT_BC6H_SF16
                 98 => DdsCompression::Bc7,  // DXGI_FORMAT_BC7_UNORM
                 99 => DdsCompression::Bc7,  // DXGI_FORMAT_BC7_UNORM_SRGB
                 _ => DdsCompression::Unknown,

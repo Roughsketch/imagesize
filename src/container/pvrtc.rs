@@ -99,7 +99,7 @@ pub fn detect_compression<R: BufRead + Seek>(reader: &mut R) -> ImageResult<Pvrt
 
     let compression = match pixel_format {
         0 => PvrtcCompression::Pvrtc2BppRgb,  // PVRTCI_2BPP_RGB
-        1 => PvrtcCompression::Pvrtc2BppRgba, // PVRTCI_2BPP_RGBA  
+        1 => PvrtcCompression::Pvrtc2BppRgba, // PVRTCI_2BPP_RGBA
         2 => PvrtcCompression::Pvrtc4BppRgb,  // PVRTCI_4BPP_RGB
         3 => PvrtcCompression::Pvrtc4BppRgba, // PVRTCI_4BPP_RGBA
         22 => PvrtcCompression::Etc2Rgb,      // ETC2_RGB
