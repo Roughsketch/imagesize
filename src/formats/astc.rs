@@ -23,6 +23,10 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 }
 
 pub fn matches(header: &[u8]) -> bool {
-    // ASTC magic number is 0x13 0xAB 0xA0 0x5C
-    header.len() >= 4 && header[0..4] == [0x13, 0xAB, 0xA0, 0x5C]
+    // ASTC magic number is 0x13 0xAB 0xA? 0x5C (third byte can be A0 or A1)
+    header.len() >= 4
+        && header[0] == 0x13
+        && header[1] == 0xAB
+        && (header[2] == 0xA0 || header[2] == 0xA1)
+        && header[3] == 0x5C
 }
