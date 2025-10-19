@@ -1,9 +1,9 @@
 #[cfg(feature = "aesprite")]
 pub mod aesprite;
+#[cfg(feature = "astc")]
+pub mod astc;
 #[cfg(feature = "bmp")]
 pub mod bmp;
-#[cfg(feature = "dds")]
-pub mod dds;
 #[cfg(feature = "exr")]
 pub mod exr;
 #[cfg(feature = "farbfeld")]
@@ -110,6 +110,48 @@ pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
         return Ok(ImageType::Aseprite);
     }
 
+    #[cfg(feature = "astc")]
+    if astc::matches(&header) {
+        return Ok(ImageType::Astc);
+    }
+
+    #[cfg(feature = "atc")]
+    if container::atc::matches(&header) {
+        use crate::container::atc::AtcCompression;
+
+        let compression =
+            container::atc::detect_compression(reader).unwrap_or(AtcCompression::Unknown);
+        return Ok(ImageType::Atc(compression));
+    }
+
+    #[cfg(feature = "pvrtc")]
+    if container::pvrtc::matches(&header) {
+        use crate::container::pvrtc::PvrtcCompression;
+
+        let compression =
+            container::pvrtc::detect_compression(reader).unwrap_or(PvrtcCompression::Unknown);
+        return Ok(ImageType::Pvrtc(compression));
+    }
+
+    // Check EAC before ETC2 since EAC is more specific
+    #[cfg(feature = "eac")]
+    if container::pkm::matches_eac(&header) {
+        use crate::container::pkm::PkmCompression;
+
+        let compression =
+            container::pkm::detect_compression(reader).unwrap_or(PkmCompression::Unknown);
+        return Ok(ImageType::Eac(compression));
+    }
+
+    #[cfg(feature = "etc2")]
+    if container::pkm::matches(&header) {
+        use crate::container::pkm::PkmCompression;
+
+        let compression =
+            container::pkm::detect_compression(reader).unwrap_or(PkmCompression::Unknown);
+        return Ok(ImageType::Etc2(compression));
+    }
+
     #[cfg(feature = "exr")]
     if exr::matches(&header) {
         return Ok(ImageType::Exr);
@@ -121,8 +163,12 @@ pub fn image_type<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageType> {
     }
 
     #[cfg(feature = "dds")]
-    if dds::matches(&header) {
-        return Ok(ImageType::Dds);
+    if container::dds::matches(&header) {
+        use crate::container::dds::DdsCompression;
+
+        let compression =
+            container::dds::detect_compression(reader).unwrap_or(DdsCompression::Unknown);
+        return Ok(ImageType::Dds(compression));
     }
 
     #[cfg(feature = "ktx2")]
