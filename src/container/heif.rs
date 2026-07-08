@@ -41,6 +41,13 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     while let Ok((tag, size)) = read_tag(reader) {
         //  Size of tag length + tag cannot be under 8 (4 bytes each)
         if size < 8 {
+            if tag == "mdat" {
+                // We've likely hit the end, so continue with what we have
+                // If this does not work for some images, then investigate
+                // looking into the 'iloc' container which should map out
+                // the sizes of these types of containers.
+                break;
+            }
             return Err(ImageError::CorruptedImage);
         }
 
