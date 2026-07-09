@@ -10,7 +10,6 @@ The goal of this crate is to be able to read the dimensions of a supported image
 - **Lightweight**: Minimal dependencies
 - **Texture Format Support**: Detects compression algorithms in DDS, PowerVR, PKM, and other texture containers  
 - **Cross-Container Queries**: Helper methods to identify compression families across different container formats
-- **Backward Compatible**: All existing APIs remain unchanged
 
 ## Usage
 Add the following to your Cargo.toml:
