@@ -42,7 +42,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
     reader.read_exact(&mut pkm_header)?;
 
     if pkm_header.starts_with(b"PKM ")
-        && (pkm_header[4..6] == [b'1', b'0'] || pkm_header[4..6] == [b'2', b'0'])
+        && (pkm_header[4..6] == *b"10" || pkm_header[4..6] == *b"20")
     {
         // Check for ATC-specific data types
         let data_type = u16::from_be_bytes([pkm_header[6], pkm_header[7]]);
@@ -69,7 +69,7 @@ pub fn matches(header: &[u8]) -> bool {
     // DDS files with ATC compression should be handled by the DDS format detector
     if header.len() >= 8
         && header.starts_with(b"PKM ")
-        && (header[4..6] == [b'1', b'0'] || header[4..6] == [b'2', b'0'])
+        && (header[4..6] == *b"10" || header[4..6] == *b"20")
     {
         let data_type = u16::from_be_bytes([header[6], header[7]]);
         return matches!(data_type, 0x8C92 | 0x8C93 | 0x87EE);
@@ -84,7 +84,7 @@ pub fn detect_compression<R: BufRead + Seek>(reader: &mut R) -> ImageResult<AtcC
     reader.seek(SeekFrom::Start(0))?;
     reader.read_exact(&mut header)?;
 
-    if header.starts_with(b"PKM ") && (header[4..6] == [b'1', b'0'] || header[4..6] == [b'2', b'0'])
+    if header.starts_with(b"PKM ") && (header[4..6] == *b"10" || header[4..6] == *b"20")
     {
         let data_type = u16::from_be_bytes([header[6], header[7]]);
         let compression = match data_type {

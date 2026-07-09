@@ -165,7 +165,7 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
 }
 
 pub fn matches(header: &[u8]) -> bool {
-    const TYPE_MARKERS: [u8; 2] = [b'\x2A', b'\x2B'];
+    const TYPE_MARKERS: [u8; 2] = *b"\x2A\x2B";
     (header.starts_with(b"II") && TYPE_MARKERS.contains(&header[2]) && header[3] == 0)
         || (header.starts_with(b"MM\x00") && TYPE_MARKERS.contains(&header[3]))
 }

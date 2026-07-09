@@ -55,7 +55,7 @@ pub fn matches(header: &[u8]) -> bool {
     // PKM format magic number followed by version
     if header.len() >= 6 {
         return header.starts_with(b"PKM ")
-            && (header[4..6] == [b'1', b'0'] || header[4..6] == [b'2', b'0']);
+            && (header[4..6] == *b"10" || header[4..6] == *b"20");
     }
     false
 }
@@ -64,7 +64,7 @@ pub fn matches_eac(header: &[u8]) -> bool {
     // PKM format with EAC-specific data types
     if header.len() >= 8
         && header.starts_with(b"PKM ")
-        && (header[4..6] == [b'1', b'0'] || header[4..6] == [b'2', b'0'])
+        && (header[4..6] == *b"10" || header[4..6] == *b"20")
     {
         // Check data type for EAC formats
         let data_type = u16::from_be_bytes([header[6], header[7]]);
