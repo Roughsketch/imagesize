@@ -4,11 +4,21 @@ use crate::{ImageResult, ImageSize};
 use std::io::{BufRead, Seek, SeekFrom};
 
 pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
-    reader.seek(SeekFrom::Start(0x12))?;
+    reader.seek(SeekFrom::Start(0x0E))?;
+    let header_size = read_u32(reader, &Endian::Little)?;
 
+    // The OS/2 BITMAPCOREHEADER stores the dimensions as two u16 values
+    if header_size == 12 {
+        return Ok(ImageSize {
+            width: read_u16(reader, &Endian::Little)? as usize,
+            height: read_u16(reader, &Endian::Little)? as usize,
+        });
+    }
+
+    // A negative height marks a top-down bitmap
     Ok(ImageSize {
         width: read_u32(reader, &Endian::Little)? as usize,
-        height: read_u32(reader, &Endian::Little)? as usize,
+        height: read_i32(reader, &Endian::Little)?.unsigned_abs() as usize,
     })
 }
 
