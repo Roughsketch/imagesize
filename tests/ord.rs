@@ -23,7 +23,7 @@ fn ord_set() {
     s.insert(b);
 
     assert_eq!(s.len(), 2);
-    assert_eq!(s.contains(&b), true);
+    assert!(s.contains(&b));
 }
 
 #[test]
