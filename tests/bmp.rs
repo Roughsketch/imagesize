@@ -1,5 +1,5 @@
 #[cfg(test)]
-use imagesize::{size, ImageSize};
+use imagesize::{size, ImageError, ImageSize};
 
 #[test]
 #[cfg(feature = "bmp")]
@@ -60,4 +60,20 @@ fn bmp_core_header_test() {
             height: 200
         }
     );
+}
+
+#[test]
+#[cfg(feature = "bmp")]
+fn bmp_invalid_dimensions_test() {
+    for (width, height) in [(17i32, 0i32), (0, 9), (-17, 9)] {
+        let mut dib = 40u32.to_le_bytes().to_vec();
+        dib.extend_from_slice(&width.to_le_bytes());
+        dib.extend_from_slice(&height.to_le_bytes());
+        dib.extend_from_slice(&[0; 28]);
+
+        assert!(matches!(
+            imagesize::blob_size(&bmp_header(&dib)),
+            Err(ImageError::CorruptedImage)
+        ));
+    }
 }

@@ -1,5 +1,5 @@
 use crate::util::*;
-use crate::{ImageResult, ImageSize};
+use crate::{ImageError, ImageResult, ImageSize};
 
 use std::io::{BufRead, Seek, SeekFrom};
 
@@ -15,10 +15,16 @@ pub fn size<R: BufRead + Seek>(reader: &mut R) -> ImageResult<ImageSize> {
         });
     }
 
+    let width = read_i32(reader, &Endian::Little)?;
+    let height = read_i32(reader, &Endian::Little)?;
+    if width <= 0 || height == 0 {
+        return Err(ImageError::CorruptedImage);
+    }
+
     // A negative height marks a top-down bitmap
     Ok(ImageSize {
-        width: read_u32(reader, &Endian::Little)? as usize,
-        height: read_i32(reader, &Endian::Little)?.unsigned_abs() as usize,
+        width: width as usize,
+        height: height.unsigned_abs() as usize,
     })
 }
 
