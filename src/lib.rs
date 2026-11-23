@@ -493,8 +493,13 @@ pub struct ImageSize {
 }
 
 impl Ord for ImageSize {
+    /// # Remarks
+    /// Orders based on total area, width individual width and height as tie breakers.
+    /// 
+    /// If `width * height` overflows, it will saturate to `usize::MAX`.
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        (self.width * self.height).cmp(&(other.width * other.height))
+        (usize::saturating_mul(self.width, self.height), self.width, self.height)
+            .cmp(&(usize::saturating_mul(other.width, other.height), other.width, other.height))
     }
 }
 
