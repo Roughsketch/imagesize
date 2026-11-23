@@ -90,11 +90,7 @@ pub fn matches(header: &[u8]) -> bool {
     }
 
     // Check for "PVR\x03" which is the modern PVRTC format
-    if header.len() >= 4 && header.starts_with(b"PVR\x03") {
-        return true;
-    }
-
-    false
+    header.len() >= 4 && header.starts_with(b"PVR\x03")
 }
 
 pub fn detect_compression<R: BufRead + Seek>(reader: &mut R) -> ImageResult<PvrtcCompression> {
